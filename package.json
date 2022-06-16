@@ -1,0 +1,39 @@
+{
+    "name": "dataset-gui",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.tsx",
+    "scripts": {
+        "dev": "next",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint"
+    },
+    "dependencies": {
+        "@nextui-org/react": "^1.0.0-beta.9",
+        "cors": "^2.8.5",
+        "dotenv": "^16.0.1",
+        "next": "^12.1.6",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+        "@types/node": "^18.0.0",
+        "@types/react": "^18.0.14",
+        "dotenv": "^16.0.1",
+        "eslint": "8.17.0",
+        "eslint-config-next": "12.1.6",
+        "tsconfig-paths-webpack-plugin": "^3.5.2",
+        "typescript": "^4.7.3"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/KookaS/dataset-gui"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/KookaS/dataset-gui/issues"
+    },
+    "homepage": "https://github.com/KookaS/dataset-gui#readme"
+}
