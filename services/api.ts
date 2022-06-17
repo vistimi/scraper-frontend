@@ -1,10 +1,8 @@
-
-import {DocumentContext} from "next/document";
+import { ImageSchema, TagSchema } from "@apiTypes/apiSchema";
 
 export class Api {
     public static host = process.env.NEXT_PUBLIC_API_URL;
     public authorization: string = null;
-    private context: DocumentContext;
 
     constructor() {
     }
@@ -22,23 +20,18 @@ export class Api {
     private get = async (path: string): Promise<Response> => {
         const requestOptions = {
             method: 'GET',
-            headers: {
-                'Access-Control-Allow-Origin': '*'
-            }
         }
-
-
-        return await fetch(`${Api.host}/${path}`, requestOptions);
+        return await fetch(`${Api.host}${path}`, requestOptions);
     };
 
     private post = async (path: string, body: string | FormData): Promise<Response> => {
         const requestOptions = {
             method: 'POST',
             headers: typeof body == "string" ? {
-                    'Content-Type': 'application/json',
-                    'Authorization': this.authorization,
-                    'Access-Control-Allow-Origin': '*'
-                } :
+                'Content-Type': 'application/json',
+                'Authorization': this.authorization,
+                'Access-Control-Allow-Origin': '*'
+            } :
                 {
                     'Authorization': this.authorization,
                     'Access-Control-Allow-Origin': '*'
@@ -46,21 +39,43 @@ export class Api {
             body
         };
 
-        return await fetch(`${Api.host}/${path}`, requestOptions);
+        return await fetch(`${Api.host}${path}`, requestOptions);
     };
 
-    private delete = async (path: string, body: string): Promise<Response> => {
+    private put = async (path: string, body: string | FormData): Promise<Response> => {
         const requestOptions = {
-            method: 'DELETE',
-            headers: {
+            method: 'PUT',
+            headers: typeof body == "string" ? {
                 'Content-Type': 'application/json',
                 'Authorization': this.authorization,
                 'Access-Control-Allow-Origin': '*'
-            },
+            } :
+                {
+                    'Authorization': this.authorization,
+                    'Access-Control-Allow-Origin': '*'
+                },
             body
         };
 
-        return await fetch(`${Api.host}/${path}`, requestOptions);
+        return await fetch(`${Api.host}${path}`, requestOptions);
+    };
+
+    private delete = async (path: string, body: FormData): Promise<Response> => {
+        const requestOptions = {
+            method: 'DELETE',
+            headers: typeof body == "string" ? {
+                'Content-Type': 'application/json',
+                'Authorization': this.authorization,
+                'Access-Control-Allow-Origin': '*'
+            } :
+                {
+                    'Authorization': this.authorization,
+                    'Access-Control-Allow-Origin': '*'
+                },
+            body
+        };
+
+        return await fetch(`${Api.host}${path}`, requestOptions);
     };
 
     private checkBadStatus = (res) => {
@@ -71,4 +86,85 @@ export class Api {
             throw new Error(`${messages[Number(index)]}: ${res.status}`);
         }
     }
+
+    public getTagsWanted = async (): Promise<TagSchema[]> => {
+        try {
+            const res = await this.get(`/tags/wanted`);
+            this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            return err;
+        }
+    };
+
+    public getTagsUnwanted = async (): Promise<TagSchema[]> => {
+        try {
+            const res = await this.get(`/tags/unwanted`);
+            this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            return err;
+        }
+    };
+
+    public postTagWanted = async (): Promise<TagSchema[]> => {
+        try {
+            const res = await this.get(`/tag/wanted`,);
+            this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            return err;
+        }
+    };
+
+    public postTagUnwanted = async (): Promise<TagSchema[]> => {
+        try {
+            const res = await this.get(`/tag/unwanted`,);
+            this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            return err;
+        }
+    };
+
+    public getImageIds = async (collection: string): Promise<TagSchema[]> => {
+        try {
+            const res = await this.get(`/images/id/${collection}`);
+            this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            return err;
+        }
+    };
+
+    public getImage = async (collection: string, id: string): Promise<ImageSchema> => {
+        try {
+            const res = await this.get(`/image/${collection}/${id}`);
+            console.log(res)
+            this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            return err;
+        }
+    };
+
+    public putImage = async (body: FormData): Promise<any> => {
+        try {
+            const res = await this.put(`/image`, body);
+            this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            return err;
+        }
+    };
+
+    public deleteImage = async (body: FormData): Promise<any> => {
+        try {
+            const res = await this.delete(`/image`, body);
+            this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            return err;
+        }
+    };
 }
