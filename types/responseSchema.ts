@@ -1,3 +1,4 @@
+// keep _id to match type of mongodb
 export interface ImageSchema {
     _id: string,
     flickId: string,
@@ -11,6 +12,7 @@ export interface ImageSchema {
     tags: TagSchema[],
 }
 
+// keep _id to match type of mongodb
 export interface TagSchema {
     _id: string,
     name: string,

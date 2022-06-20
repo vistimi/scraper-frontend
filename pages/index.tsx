@@ -80,10 +80,15 @@ export default class Index extends Component<IndexProps, IndexState> {
     render() {
         return (
             <>
+                {/* Image navigation */}
                 <Pagination total={this.state.ids.length + 1} initialPage={1} onChange={(page) => { this.setPage(page) }} />
-                <Button auto bordered color="secondary" css={{ px: "$13" }} onClick={this.getIds}>
+
+                {/* Refresh button */}
+                <Button auto bordered color="secondary" css={{ px: "$13" }} onPress={this.getIds}>
                     <Loading type="points-opacity" color="currentColor" size="sm" />
                 </Button>
+
+                {/* Image informations */}
                 {this.state.image ?
                     <>
                         <Image src={this.state.imageUrl} alt="Image" key={'file'} width={this.state.image.width} height={this.state.image.height} />
@@ -109,12 +114,9 @@ export default class Index extends Component<IndexProps, IndexState> {
                     </> :
                     <></>
                 }
-                <Modal
-                    closeButton
-                    aria-labelledby="modal-title"
-                    open={this.state.modalVisibility}
-                    onClose={this.closeModal}
-                >
+
+                {/* Error Modal */}
+                <Modal closeButton aria-labelledby="modal-title" open={this.state.modalVisibility} onClose={this.closeModal}>
                     <Modal.Header>
                         <Text id="modal-title" b size={18}>
                             Error message
@@ -124,11 +126,12 @@ export default class Index extends Component<IndexProps, IndexState> {
                         {this.state.modalMessage}
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button auto flat color="error" onClick={this.closeModal}>
+                        <Button auto flat color="error" onPress={this.closeModal}>
                             Close
                         </Button>
                     </Modal.Footer>
                 </Modal>
+
                 <Button shadow color="error" auto onPress={this.deleteImage}>Remove image</Button>
             </>
         )

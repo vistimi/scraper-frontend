@@ -41,12 +41,12 @@ export class Api {
         return await fetch(`${Api.host}${path}`, requestOptions);
     };
 
-    private delete = async (path: string, body: string): Promise<Response> => {
+    private delete = async (path: string, body?: string): Promise<Response> => {
         const requestOptions = {
             method: 'DELETE',
-            headers: {
+            headers: body ? {
                 'Content-Type': 'application/json'
-            },
+            } : {},
             body
         };
         return await fetch(`${Api.host}${path}`, requestOptions);
@@ -60,7 +60,7 @@ export class Api {
         }
     }
 
-    public getTagsWanted = async (): Promise<TagSchema[]> => {
+    public getTagsWanted = async (): Promise<TagSchema[] | null> => {
         try {
             const res = await this.get(`/tags/wanted`);
             await this.checkBadStatus(res);
@@ -70,7 +70,7 @@ export class Api {
         }
     };
 
-    public getTagsUnwanted = async (): Promise<TagSchema[]> => {
+    public getTagsUnwanted = async (): Promise<TagSchema[] | null> => {
         try {
             const res = await this.get(`/tags/unwanted`);
             await this.checkBadStatus(res);
@@ -101,6 +101,26 @@ export class Api {
             throw err
         }
 
+    };
+
+    public deleteTagWanted = async (id: string): Promise<any> => {
+        try {
+            const res = await this.delete(`/tag/wanted/${id}`);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    public deleteTagUnwanted = async (id: string): Promise<any> => {
+        try {
+            const res = await this.delete(`/tag/unwanted/${id}`);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
     };
 
     public getImageIds = async (collection: string): Promise<TagSchema[]> => {
