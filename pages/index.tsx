@@ -1,8 +1,8 @@
 import React, { Component, useEffect } from 'react';
 import { Api } from "@services/api";
-import { Button, Image, Collapse, Text, Pagination, Modal } from '@nextui-org/react';
+import { Button, Image, Collapse, Text, Pagination, Modal, Loading } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
-import { PostTagSchema } from '@apiTypes/requestSchema';
+import { DeleteImageSchema, PostTagSchema } from '@apiTypes/requestSchema';
 
 interface IndexProps { }
 interface IndexState {
@@ -28,15 +28,19 @@ export default class Index extends Component<IndexProps, IndexState> {
     }
 
     async componentDidMount(): Promise<void> {
-        const tags = await this.api.getImageIds("flickr");
-        const ids = tags.map(tag => tag._id);
-        this.setState({ ids });
+        await this.getIds()
     }
 
     componentDidUpdate(prevProps: Readonly<IndexProps>, prevState: Readonly<IndexState>): void {
         if (prevState.ids !== this.state.ids) {
             this.image(1)
         }
+    }
+
+    private getIds = async () => {
+        const tags = await this.api.getImageIds("flickr");
+        const ids = tags.map(tag => tag._id);
+        this.setState({ ids });
     }
 
     private image = async (page: number) => {
@@ -52,9 +56,8 @@ export default class Index extends Component<IndexProps, IndexState> {
         try {
             await this.api.postTagUnwanted(body);
         } catch (error) {
-            this.setState({modalVisibility: true, modalMessage: `${error}`})
+            this.setState({ modalVisibility: true, modalMessage: `${error}` })
         }
-
     }
 
     private setPage = (page: number) => {
@@ -65,10 +68,22 @@ export default class Index extends Component<IndexProps, IndexState> {
         this.setState({ modalVisibility: false });
     };
 
+    private deleteImage = async () => {
+        const body: DeleteImageSchema = {
+            collection: "flickr",
+            id: this.state.image._id,
+        }
+        await this.api.deleteImage(body)
+        await this.getIds()
+    }
+
     render() {
         return (
             <>
                 <Pagination total={this.state.ids.length + 1} initialPage={1} onChange={(page) => { this.setPage(page) }} />
+                <Button auto bordered color="secondary" css={{ px: "$13" }} onClick={this.getIds}>
+                    <Loading type="points-opacity" color="currentColor" size="sm" />
+                </Button>
                 {this.state.image ?
                     <>
                         <Image src={this.state.imageUrl} alt="Image" key={'file'} width={this.state.image.width} height={this.state.image.height} />
@@ -114,6 +129,7 @@ export default class Index extends Component<IndexProps, IndexState> {
                         </Button>
                     </Modal.Footer>
                 </Modal>
+                <Button shadow color="error" auto onPress={this.deleteImage}>Remove image</Button>
             </>
         )
     }
