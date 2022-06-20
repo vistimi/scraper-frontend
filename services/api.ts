@@ -1,4 +1,5 @@
-import { ImageSchema, TagSchema } from "@apiTypes/apiSchema";
+import { ImageSchema, TagSchema } from "@apiTypes/responseSchema";
+import { DeleteImageSchema, PostTagSchema, PutImageSchema } from "@apiTypes/requestSchema";
 
 export class Api {
     public static host = process.env.NEXT_PUBLIC_API_URL;
@@ -11,12 +12,6 @@ export class Api {
         return Api.host;
     }
 
-    private emptyPromise = (element?: any): Promise<any> => {
-        return new Promise((resolve) => {
-            resolve(element ? element : null);
-        });
-    }
-
     private get = async (path: string): Promise<Response> => {
         const requestOptions = {
             method: 'GET',
@@ -24,147 +19,129 @@ export class Api {
         return await fetch(`${Api.host}${path}`, requestOptions);
     };
 
-    private post = async (path: string, body: string | FormData): Promise<Response> => {
+    private post = async (path: string, body: string): Promise<Response> => {
         const requestOptions = {
             method: 'POST',
-            headers: typeof body == "string" ? {
-                'Content-Type': 'application/json',
-                'Authorization': this.authorization,
-                'Access-Control-Allow-Origin': '*'
-            } :
-                {
-                    'Authorization': this.authorization,
-                    'Access-Control-Allow-Origin': '*'
-                },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body
         };
-
         return await fetch(`${Api.host}${path}`, requestOptions);
     };
 
-    private put = async (path: string, body: string | FormData): Promise<Response> => {
+    private put = async (path: string, body: string): Promise<Response> => {
         const requestOptions = {
             method: 'PUT',
-            headers: typeof body == "string" ? {
-                'Content-Type': 'application/json',
-                'Authorization': this.authorization,
-                'Access-Control-Allow-Origin': '*'
-            } :
-                {
-                    'Authorization': this.authorization,
-                    'Access-Control-Allow-Origin': '*'
-                },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body
         };
-
         return await fetch(`${Api.host}${path}`, requestOptions);
     };
 
-    private delete = async (path: string, body: FormData): Promise<Response> => {
+    private delete = async (path: string, body: string): Promise<Response> => {
         const requestOptions = {
             method: 'DELETE',
-            headers: typeof body == "string" ? {
-                'Content-Type': 'application/json',
-                'Authorization': this.authorization,
-                'Access-Control-Allow-Origin': '*'
-            } :
-                {
-                    'Authorization': this.authorization,
-                    'Access-Control-Allow-Origin': '*'
-                },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body
         };
-
         return await fetch(`${Api.host}${path}`, requestOptions);
     };
 
-    private checkBadStatus = (res) => {
+    private checkBadStatus = async (res: Response): Promise<void | Error> => {
         if (res.status >= 300) {
             const messages = ["Bad Request", "Server Error"];
             const index = res.status >= 500;
-
-            throw new Error(`${messages[Number(index)]}: ${res.status}`);
+            throw new Error(`${messages[Number(index)]} ${res.status}! message: ${JSON.stringify(await res.json(), null, 2)}`);
         }
     }
 
     public getTagsWanted = async (): Promise<TagSchema[]> => {
         try {
             const res = await this.get(`/tags/wanted`);
-            this.checkBadStatus(res);
+            await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
-            return err;
+            throw err;
         }
     };
 
     public getTagsUnwanted = async (): Promise<TagSchema[]> => {
         try {
             const res = await this.get(`/tags/unwanted`);
-            this.checkBadStatus(res);
+            await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
-            return err;
+            throw err;
         }
     };
 
-    public postTagWanted = async (): Promise<TagSchema[]> => {
+    public postTagWanted = async (body: PostTagSchema): Promise<any> => {
         try {
-            const res = await this.get(`/tag/wanted`,);
-            this.checkBadStatus(res);
+            const str = JSON.stringify(body);
+            const res = await this.post(`/tag/wanted`, str);
+            await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
-            return err;
+            throw err;
         }
     };
 
-    public postTagUnwanted = async (): Promise<TagSchema[]> => {
+    public postTagUnwanted = async (body: PostTagSchema): Promise<any> => {
         try {
-            const res = await this.get(`/tag/unwanted`,);
-            this.checkBadStatus(res);
+            const str = JSON.stringify(body);
+            const res = await this.post(`/tag/unwanted`, str);
+            await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
-            return err;
+            throw err
         }
+
     };
 
     public getImageIds = async (collection: string): Promise<TagSchema[]> => {
         try {
             const res = await this.get(`/images/id/${collection}`);
-            this.checkBadStatus(res);
+            await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
-            return err;
+            throw err;
         }
     };
 
     public getImage = async (collection: string, id: string): Promise<ImageSchema> => {
         try {
             const res = await this.get(`/image/${collection}/${id}`);
-            console.log(res)
-            this.checkBadStatus(res);
+            await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
-            return err;
+            throw err;
         }
     };
 
-    public putImage = async (body: FormData): Promise<any> => {
+    public putImage = async (body: PutImageSchema): Promise<any> => {
         try {
-            const res = await this.put(`/image`, body);
-            this.checkBadStatus(res);
+            const str = JSON.stringify(body);
+            const res = await this.put(`/image`, str);
+            await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
-            return err;
+            throw err;
         }
     };
 
-    public deleteImage = async (body: FormData): Promise<any> => {
+    public deleteImage = async (body: DeleteImageSchema): Promise<any> => {
         try {
-            const res = await this.delete(`/image`, body);
-            this.checkBadStatus(res);
+            const str = JSON.stringify(body);
+            const res = await this.delete(`/image`, str);
+            await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
-            return err;
+            throw err;
         }
     };
 }

@@ -22,11 +22,10 @@ const App = ({ Component, pageProps }) => {
                             background: white;
                             color: rgb(20, 20, 20);
                             
-                            font-size: 16px; 
+                            font-size: 14px; 
                             font-style: normal; 
                             font-variant: normal; 
-                            font-weight: 800; 
-                            line-height: 35px;         
+                            font-weight: 800;    
                             overflow-x: hidden;               
                         }
                     `}

@@ -7,13 +7,13 @@ export interface ImageSchema {
     title: string,
     description: string,
     license: string,
+    creationDate: string
     tags: TagSchema[],
-    creationDate: Date
 }
 
 export interface TagSchema {
     _id: string,
     name: string,
     origin: string,
-    creationDate: Date,
+    creationDate: string,
 }
