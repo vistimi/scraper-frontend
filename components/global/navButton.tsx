@@ -13,5 +13,5 @@ interface NavButtonProps {
 
 export const NavButton = ({children, href, title, currentPage}: NavButtonProps): JSX.Element =>
     <Link href={href}>
-        <Button>{children}</Button>
+        <Button css={{ color: "black", fontWeight: "bold" }}>{children}</Button>
     </Link>;

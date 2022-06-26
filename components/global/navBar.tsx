@@ -3,6 +3,7 @@ import { NavButton } from "./navButton";
 import Styled from 'styled-components';
 
 export const NavBarPadding = Styled.span`
+    width: 100%;
     display: block;
 `;
 

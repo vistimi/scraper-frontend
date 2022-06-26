@@ -82,72 +82,68 @@ export default function Tags(props: IndexProps) {
 
     return <>
         {/* Tags wanted deletion and addition */}
+        <h1>Tags Wanted</h1>
+        <Input label="Add Tag Wanted" placeholder="Tag Name" onKeyDown={addTagWanted} />
         {tagsWanted.length ?
-            <>
-                <h1>Tags Wanted</h1>
-                <Table
-                    aria-label="Tags Wanted"
-                    css={{
-                        height: "auto",
-                        minWidth: "100%",
-                    }}
-                >
-                    <Table.Header>
-                        <Table.Column>ID</Table.Column>
-                        <Table.Column>NAME</Table.Column>
-                        <Table.Column>ORIGIN</Table.Column>
-                        <Table.Column>CREATION</Table.Column>
-                        <Table.Column>DELETE</Table.Column>
-                    </Table.Header>
-                    <Table.Body>
-                        {tagsWanted.map(tag =>
-                            <Table.Row key={tag._id}>
-                                <Table.Cell>{tag._id}</Table.Cell>
-                                <Table.Cell>{tag.name}</Table.Cell>
-                                <Table.Cell>{tag.origin}</Table.Cell>
-                                <Table.Cell>{tag.creationDate}</Table.Cell>
-                                <Table.Cell><Button color="error" onPress={() => { deleteTagWanted(tag._id) }} auto>DELETE</Button></Table.Cell>
-                            </Table.Row>)}
-                    </Table.Body>
-                </Table>
-            </> :
+            <Table
+                aria-label="Tags Wanted"
+                css={{
+                    height: "auto",
+                    minWidth: "100%",
+                }}
+            >
+                <Table.Header>
+                    <Table.Column>ID</Table.Column>
+                    <Table.Column>NAME</Table.Column>
+                    <Table.Column>ORIGIN</Table.Column>
+                    <Table.Column>CREATION</Table.Column>
+                    <Table.Column>DELETE</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                    {tagsWanted.map(tag =>
+                        <Table.Row key={tag._id}>
+                            <Table.Cell>{tag._id}</Table.Cell>
+                            <Table.Cell>{tag.name}</Table.Cell>
+                            <Table.Cell>{tag.origin}</Table.Cell>
+                            <Table.Cell>{tag.creationDate}</Table.Cell>
+                            <Table.Cell><Button color="error" onPress={() => { deleteTagWanted(tag._id) }} auto>DELETE</Button></Table.Cell>
+                        </Table.Row>)}
+                </Table.Body>
+            </Table> :
             <></>
         }
-        <Input label="Add Tag Wanted" placeholder="Tag Name" onKeyDown={addTagWanted} />
 
         {/* Tags unwanted deletion and addition */}
+        <h1>Tags Unwanted</h1>
+        <Input label="Add Tag Unwanted" placeholder="Tag Name" onKeyDown={addTagUnwanted} />
         {tagsUnwanted.length ?
-            <>
-                <h1>Tags Unwanted</h1>
-                <Table
-                    aria-label="Tags Unwanted"
-                    css={{
-                        height: "auto",
-                        minWidth: "100%",
-                    }}
-                >
-                    <Table.Header>
-                        <Table.Column>ID</Table.Column>
-                        <Table.Column>NAME</Table.Column>
-                        <Table.Column>ORIGIN</Table.Column>
-                        <Table.Column>CREATION</Table.Column>
-                        <Table.Column>DELETE</Table.Column>
-                    </Table.Header>
-                    <Table.Body>
-                        {tagsUnwanted.map(tag =>
-                            <Table.Row key={tag._id}>
-                                <Table.Cell>{tag._id}</Table.Cell>
-                                <Table.Cell>{tag.name}</Table.Cell>
-                                <Table.Cell>{tag.origin}</Table.Cell>
-                                <Table.Cell>{tag.creationDate}</Table.Cell>
-                                <Table.Cell><Button color="error" onPress={() => { deleteTagUnwanted(tag._id) }} auto>DELETE</Button></Table.Cell>
-                            </Table.Row>)}
-                    </Table.Body>
-                </Table>
-            </> :
+            <Table
+                aria-label="Tags Unwanted"
+                css={{
+                    height: "auto",
+                    minWidth: "100%",
+                }}
+            >
+                <Table.Header>
+                    <Table.Column>ID</Table.Column>
+                    <Table.Column>NAME</Table.Column>
+                    <Table.Column>ORIGIN</Table.Column>
+                    <Table.Column>CREATION</Table.Column>
+                    <Table.Column>DELETE</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                    {tagsUnwanted.map(tag =>
+                        <Table.Row key={tag._id}>
+                            <Table.Cell>{tag._id}</Table.Cell>
+                            <Table.Cell>{tag.name}</Table.Cell>
+                            <Table.Cell>{tag.origin}</Table.Cell>
+                            <Table.Cell>{tag.creationDate}</Table.Cell>
+                            <Table.Cell><Button color="error" onPress={() => { deleteTagUnwanted(tag._id) }} auto>DELETE</Button></Table.Cell>
+                        </Table.Row>)}
+                </Table.Body>
+            </Table> :
             <></>
         }
-        <Input label="Add Tag Unwanted" placeholder="Tag Name" onKeyDown={addTagUnwanted} />
 
         {/* Error Modal */}
         <Modal closeButton aria-labelledby="modal-title" open={modalVisibility} onClose={() => { setModalVisibility(false) }}>

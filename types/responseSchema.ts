@@ -11,7 +11,7 @@ export interface ImageSchema {
     description: string,
     license: string,
     creationDate: string
-    tags: TagSchema[],
+    tags: TagSchema[] | undefined,
 }
 
 // keep _id to match type of mongodb

@@ -42,7 +42,7 @@ const App = ({ Component, pageProps }) => {
                             font-style: normal; 
                             font-variant: normal; 
                             font-weight: 800;    
-                            overflow-x: hidden;               
+                            overflow-x: hidden;           
                         }
                     `}
                 </style>

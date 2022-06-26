@@ -1,6 +1,6 @@
 import React, { Component, useEffect } from 'react';
 import { Api } from "@services/api";
-import { Button, Image, Collapse, Text, Pagination, Modal, Loading, Table } from '@nextui-org/react';
+import { Button, Image, Text, Pagination, Modal, Loading, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { DeleteImageSchema, PostTagSchema } from '@apiTypes/requestSchema';
 
@@ -11,6 +11,7 @@ interface IndexState {
     imageUrl: string,
     modalVisibility: boolean,
     modalMessage: string,
+    collection: string,
 }
 export default class Index extends Component<IndexProps, IndexState> {
     public static title: string = "images";
@@ -24,11 +25,12 @@ export default class Index extends Component<IndexProps, IndexState> {
             imageUrl: "",
             modalVisibility: false,
             modalMessage: "",
+            collection: "flickr",
         }
     }
 
     async componentDidMount(): Promise<void> {
-        await this.getIds()
+        await this.getIds(this.state.collection)
     }
 
     componentDidUpdate(prevProps: Readonly<IndexProps>, prevState: Readonly<IndexState>): void {
@@ -37,15 +39,16 @@ export default class Index extends Component<IndexProps, IndexState> {
         }
     }
 
-    private getIds = async () => {
-        const tags = await this.api.getImageIds("flickr");
+    private getIds = async (collection: string) => {
+        const tags = await this.api.getImageIds(collection);
         const ids = tags.map(tag => tag._id);
-        this.setState({ ids });
+        this.setState({ ids, collection });
     }
 
     private image = async (page: number) => {
-        const image = await this.api.getImage("flickr", this.state.ids[page - 1]);
-        this.setState({ image, imageUrl: `${this.api.hostName()}/image/file/flickr/${image.path}` })
+        const image = await this.api.getImage(this.state.collection, this.state.ids[page - 1]);
+        console.log(this.state.collection, this.state.ids[page - 1], image)
+        this.setState({ image, imageUrl: `${this.api.hostName()}/image/file/${this.state.collection}/${image.path}` })
     };
 
     private postTagUnwanted = async (name: string) => {
@@ -82,20 +85,21 @@ export default class Index extends Component<IndexProps, IndexState> {
 
     private deleteImage = async () => {
         const body: DeleteImageSchema = {
-            collection: "flickr",
+            collection: this.state.collection,
             id: this.state.image._id,
         }
         await this.api.deleteImage(body)
-        await this.getIds()
+        await this.getIds(this.state.collection)
     }
 
     render() {
         return (
             <>
-                {/* Refresh button */}
-                <Button auto bordered color="secondary" css={{ px: "$13" }} onPress={this.getIds}>
-                    <Loading type="points-opacity" color="currentColor" size="sm" />
-                </Button>
+                <Button.Group>
+                    <Button auto onPress={() => { this.getIds("flickr") }}>Flickr</Button>
+                    <Button auto onPress={() => { this.getIds("unsplash") }}>Unsplash</Button>
+                    <Button auto onPress={() => { this.getIds("pexels") }}>Pexels</Button>
+                </Button.Group>
 
                 {/* Image navigation */}
                 <Pagination total={this.state.ids.length + 1} initialPage={1} onChange={(page) => { this.setPage(page) }} />
@@ -112,31 +116,34 @@ export default class Index extends Component<IndexProps, IndexState> {
                         <div>description: {this.state.image.description}</div>
                         <div>license: {this.state.image.license}</div>
                         <div>creationDate: {`${this.state.image.creationDate}`}</div>
-                        <Table
-                            aria-label="Tags Wanted"
-                            css={{
-                                height: "auto",
-                                minWidth: "100%",
-                            }}
-                        >
-                            <Table.Header>
-                                <Table.Column>NAME</Table.Column>
-                                <Table.Column>ORIGIN</Table.Column>
-                                <Table.Column>CREATION</Table.Column>
-                                <Table.Column>DELETE</Table.Column>
-                                <Table.Column>ADD</Table.Column>
-                            </Table.Header>
-                            <Table.Body>
-                                {this.state.image.tags.map(tag =>
-                                    <Table.Row key={tag.name}>
-                                        <Table.Cell>{tag.name}</Table.Cell>
-                                        <Table.Cell>{tag.origin}</Table.Cell>
-                                        <Table.Cell>{tag.creationDate}</Table.Cell>
-                                        <Table.Cell><Button color="error" onPress={() => { this.postTagUnwanted(tag.name) }} auto>BAN TAG</Button></Table.Cell>
-                                        <Table.Cell><Button color="success" onPress={() => { this.postTagWanted(tag.name) }} auto>ADD TAG</Button></Table.Cell>
-                                    </Table.Row>)}
-                            </Table.Body>
-                        </Table>
+                        {this.state.image.tags ?
+                            <Table
+                                aria-label="Tags Wanted"
+                                css={{
+                                    height: "auto",
+                                    minWidth: "100%",
+                                }}
+                            >
+                                <Table.Header>
+                                    <Table.Column>NAME</Table.Column>
+                                    <Table.Column>ORIGIN</Table.Column>
+                                    <Table.Column>CREATION</Table.Column>
+                                    <Table.Column>DELETE</Table.Column>
+                                    <Table.Column>ADD</Table.Column>
+                                </Table.Header>
+                                <Table.Body>
+                                    {this.state.image.tags.map(tag =>
+                                        <Table.Row key={tag.name}>
+                                            <Table.Cell>{tag.name}</Table.Cell>
+                                            <Table.Cell>{tag.origin}</Table.Cell>
+                                            <Table.Cell>{tag.creationDate}</Table.Cell>
+                                            <Table.Cell><Button color="error" onPress={() => { this.postTagUnwanted(tag.name) }} auto>BAN TAG</Button></Table.Cell>
+                                            <Table.Cell><Button color="success" onPress={() => { this.postTagWanted(tag.name) }} auto>ADD TAG</Button></Table.Cell>
+                                        </Table.Row>)}
+                                </Table.Body>
+                            </Table> :
+                            <></>
+                        }
                     </> :
                     <></>
                 }
