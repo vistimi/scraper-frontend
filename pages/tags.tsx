@@ -106,7 +106,7 @@ export default function Tags(props: IndexProps) {
                                 <Table.Cell>{tag.name}</Table.Cell>
                                 <Table.Cell>{tag.origin}</Table.Cell>
                                 <Table.Cell>{tag.creationDate}</Table.Cell>
-                                <Table.Cell><Button color="error" onPress={() => { deleteTagWanted(tag._id) }}>DELETE</Button></Table.Cell>
+                                <Table.Cell><Button color="error" onPress={() => { deleteTagWanted(tag._id) }} auto>DELETE</Button></Table.Cell>
                             </Table.Row>)}
                     </Table.Body>
                 </Table>
@@ -140,7 +140,7 @@ export default function Tags(props: IndexProps) {
                                 <Table.Cell>{tag.name}</Table.Cell>
                                 <Table.Cell>{tag.origin}</Table.Cell>
                                 <Table.Cell>{tag.creationDate}</Table.Cell>
-                                <Table.Cell><Button color="error" onPress={() => { deleteTagUnwanted(tag._id) }}>DELETE</Button></Table.Cell>
+                                <Table.Cell><Button color="error" onPress={() => { deleteTagUnwanted(tag._id) }} auto>DELETE</Button></Table.Cell>
                             </Table.Row>)}
                     </Table.Body>
                 </Table>

@@ -1,6 +1,6 @@
 import React, { Component, useEffect } from 'react';
 import { Api } from "@services/api";
-import { Button, Image, Collapse, Text, Pagination, Modal, Loading } from '@nextui-org/react';
+import { Button, Image, Collapse, Text, Pagination, Modal, Loading, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { DeleteImageSchema, PostTagSchema } from '@apiTypes/requestSchema';
 
@@ -60,6 +60,18 @@ export default class Index extends Component<IndexProps, IndexState> {
         }
     }
 
+    private postTagWanted = async (name: string) => {
+        const body: PostTagSchema = {
+            name: name,
+            origin: "gui",
+        }
+        try {
+            await this.api.postTagWanted(body);
+        } catch (error) {
+            this.setState({ modalVisibility: true, modalMessage: `${error}` })
+        }
+    }
+
     private setPage = (page: number) => {
         this.image(page);
     }
@@ -81,12 +93,12 @@ export default class Index extends Component<IndexProps, IndexState> {
         return (
             <>
                 {/* Refresh button */}
-                <Button auto bordered color="secondary" css={{ px: "$13"}} onPress={this.getIds}>
+                <Button auto bordered color="secondary" css={{ px: "$13" }} onPress={this.getIds}>
                     <Loading type="points-opacity" color="currentColor" size="sm" />
                 </Button>
 
                 {/* Image navigation */}
-                <Pagination total={this.state.ids.length + 1} initialPage={1} onChange={(page) => { this.setPage(page) }}/>
+                <Pagination total={this.state.ids.length + 1} initialPage={1} onChange={(page) => { this.setPage(page) }} />
 
                 {/* Image informations */}
                 {this.state.image ?
@@ -100,17 +112,31 @@ export default class Index extends Component<IndexProps, IndexState> {
                         <div>description: {this.state.image.description}</div>
                         <div>license: {this.state.image.license}</div>
                         <div>creationDate: {`${this.state.image.creationDate}`}</div>
-                        <Collapse.Group>
-                            {this.state.image.tags ?
-                                this.state.image.tags.map(tag =>
-                                    <Collapse title={tag.name} key={tag.name}>
-                                        <Text>Origin: {tag.origin}</Text>
-                                        <Text>Creation: {tag.creationDate}</Text>
-                                        <Button shadow color="error" auto onPress={() => { this.postTagUnwanted(tag.name) }}>Ban tag</Button>
-                                    </Collapse>
-                                ) :
-                                <></>}
-                        </Collapse.Group>
+                        <Table
+                            aria-label="Tags Wanted"
+                            css={{
+                                height: "auto",
+                                minWidth: "100%",
+                            }}
+                        >
+                            <Table.Header>
+                                <Table.Column>NAME</Table.Column>
+                                <Table.Column>ORIGIN</Table.Column>
+                                <Table.Column>CREATION</Table.Column>
+                                <Table.Column>DELETE</Table.Column>
+                                <Table.Column>ADD</Table.Column>
+                            </Table.Header>
+                            <Table.Body>
+                                {this.state.image.tags.map(tag =>
+                                    <Table.Row key={tag.name}>
+                                        <Table.Cell>{tag.name}</Table.Cell>
+                                        <Table.Cell>{tag.origin}</Table.Cell>
+                                        <Table.Cell>{tag.creationDate}</Table.Cell>
+                                        <Table.Cell><Button color="error" onPress={() => { this.postTagUnwanted(tag.name) }} auto>BAN TAG</Button></Table.Cell>
+                                        <Table.Cell><Button color="success" onPress={() => { this.postTagWanted(tag.name) }} auto>ADD TAG</Button></Table.Cell>
+                                    </Table.Row>)}
+                            </Table.Body>
+                        </Table>
                     </> :
                     <></>
                 }
@@ -132,7 +158,7 @@ export default class Index extends Component<IndexProps, IndexState> {
                     </Modal.Footer>
                 </Modal>
 
-                <Button shadow color="error" auto onPress={this.deleteImage}>Remove image</Button>
+                <Button shadow color="error" auto onPress={this.deleteImage}>REMOVE IMAGE</Button>
             </>
         )
     }
