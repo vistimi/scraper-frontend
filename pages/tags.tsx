@@ -80,12 +80,11 @@ export default function Tags(props: IndexProps) {
         }
     }
 
-
     return <>
         {/* Tags wanted deletion and addition */}
         {tagsWanted.length ?
             <>
-                <h1>Tags Wated</h1>
+                <h1>Tags Wanted</h1>
                 <Table
                     aria-label="Tags Wanted"
                     css={{
@@ -119,9 +118,9 @@ export default function Tags(props: IndexProps) {
         {/* Tags unwanted deletion and addition */}
         {tagsUnwanted.length ?
             <>
-                <h1>Tags Unwated</h1>
+                <h1>Tags Unwanted</h1>
                 <Table
-                    aria-label="Tags Unwated"
+                    aria-label="Tags Unwanted"
                     css={{
                         height: "auto",
                         minWidth: "100%",

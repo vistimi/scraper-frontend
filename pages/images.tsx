@@ -13,7 +13,7 @@ interface IndexState {
     modalMessage: string,
 }
 export default class Index extends Component<IndexProps, IndexState> {
-    public static title: string = "index";
+    public static title: string = "images";
     private api: Api = new Api();
 
     constructor(props: IndexProps) {
@@ -48,7 +48,7 @@ export default class Index extends Component<IndexProps, IndexState> {
         this.setState({ image, imageUrl: `${this.api.hostName()}/image/file/flickr/${image.path}` })
     };
 
-    private tagUnwanted = async (name: string) => {
+    private postTagUnwanted = async (name: string) => {
         const body: PostTagSchema = {
             name: name,
             origin: "gui",
@@ -80,20 +80,20 @@ export default class Index extends Component<IndexProps, IndexState> {
     render() {
         return (
             <>
-                {/* Image navigation */}
-                <Pagination total={this.state.ids.length + 1} initialPage={1} onChange={(page) => { this.setPage(page) }} />
-
                 {/* Refresh button */}
-                <Button auto bordered color="secondary" css={{ px: "$13" }} onPress={this.getIds}>
+                <Button auto bordered color="secondary" css={{ px: "$13"}} onPress={this.getIds}>
                     <Loading type="points-opacity" color="currentColor" size="sm" />
                 </Button>
+
+                {/* Image navigation */}
+                <Pagination total={this.state.ids.length + 1} initialPage={1} onChange={(page) => { this.setPage(page) }}/>
 
                 {/* Image informations */}
                 {this.state.image ?
                     <>
                         <Image src={this.state.imageUrl} alt="Image" key={'file'} width={this.state.image.width} height={this.state.image.height} />
                         <div>_id: {this.state.image._id}</div>
-                        <div>flickId: {this.state.image.flickId}</div>
+                        <div>originID: {this.state.image.originID}</div>
                         <div>width: {this.state.image.width}</div>
                         <div>height: {this.state.image.height}</div>
                         <div>title: {this.state.image.title}</div>
@@ -106,7 +106,7 @@ export default class Index extends Component<IndexProps, IndexState> {
                                     <Collapse title={tag.name} key={tag.name}>
                                         <Text>Origin: {tag.origin}</Text>
                                         <Text>Creation: {tag.creationDate}</Text>
-                                        <Button shadow color="error" auto onPress={() => { this.tagUnwanted(tag.name) }}>Ban tag</Button>
+                                        <Button shadow color="error" auto onPress={() => { this.postTagUnwanted(tag.name) }}>Ban tag</Button>
                                     </Collapse>
                                 ) :
                                 <></>}

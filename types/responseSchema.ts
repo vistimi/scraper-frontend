@@ -1,7 +1,9 @@
 // keep _id to match type of mongodb
 export interface ImageSchema {
     _id: string,
-    flickId: string,
+    origin: string,
+    originID: string,
+    extension: string,
     path: string,
     width: number,
     height: number,
