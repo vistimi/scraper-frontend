@@ -3,6 +3,7 @@ export interface ImageSchema {
     _id: string,
     origin: string,
     originID: string,
+    user: UserSchema,
     extension: string,
     path: string,
     width: number,
@@ -19,5 +20,13 @@ export interface TagSchema {
     _id: string,
     name: string,
     origin: string,
+    creationDate: string,
+}
+
+export interface UserSchema {
+    _id: string,
+    origin: string,
+    name: string,
+    originID: string,
     creationDate: string,
 }

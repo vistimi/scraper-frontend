@@ -4,13 +4,7 @@ import { Button, Table, Input, Modal, Text } from '@nextui-org/react';
 import { TagSchema } from '@apiTypes/responseSchema';
 import { PostTagSchema } from '@apiTypes/requestSchema';
 
-interface IndexProps { }
-interface IndexState {
-    tagsUnwanted: TagSchema[],
-    tagsWanted: TagSchema[],
-}
-
-export default function Tags(props: IndexProps) {
+export default function Tags(props: {}) {
     const api: Api = new Api();
     const [tagsWanted, setTagsWanted] = useState<TagSchema[]>([]);
     const [tagsUnwanted, setTagsUnwanted] = useState<TagSchema[]>([]);
@@ -106,7 +100,7 @@ export default function Tags(props: IndexProps) {
                             <Table.Cell>{tag.name}</Table.Cell>
                             <Table.Cell>{tag.origin}</Table.Cell>
                             <Table.Cell>{tag.creationDate}</Table.Cell>
-                            <Table.Cell><Button color="error" onPress={() => { deleteTagWanted(tag._id) }} auto>DELETE</Button></Table.Cell>
+                            <Table.Cell><Button color="error" onPress={() => { deleteTagWanted(tag._id) }} auto css={{ color: "black"}}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>
             </Table> :
@@ -138,7 +132,7 @@ export default function Tags(props: IndexProps) {
                             <Table.Cell>{tag.name}</Table.Cell>
                             <Table.Cell>{tag.origin}</Table.Cell>
                             <Table.Cell>{tag.creationDate}</Table.Cell>
-                            <Table.Cell><Button color="error" onPress={() => { deleteTagUnwanted(tag._id) }} auto>DELETE</Button></Table.Cell>
+                            <Table.Cell><Button color="error" onPress={() => { deleteTagUnwanted(tag._id) }} auto css={{ color: "black"}}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>
             </Table> :

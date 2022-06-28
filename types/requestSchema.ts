@@ -15,3 +15,9 @@ export interface PostTagSchema {
     name: string,
     origin: string,
 }
+
+export interface PostUserSchema {
+    origin: string,
+    name: string,
+    originID: string,
+}

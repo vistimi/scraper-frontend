@@ -2,7 +2,7 @@ import React, { Component, useEffect } from 'react';
 import { Api } from "@services/api";
 import { Button, Image, Text, Pagination, Modal, Loading, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
-import { DeleteImageSchema, PostTagSchema } from '@apiTypes/requestSchema';
+import { DeleteImageSchema, PostTagSchema, PostUserSchema } from '@apiTypes/requestSchema';
 
 interface IndexProps { }
 interface IndexState {
@@ -78,6 +78,19 @@ export default class Index extends Component<IndexProps, IndexState> {
         }
     }
 
+    private postUserUnwanted = async () => {
+        const body: PostUserSchema = {
+            origin: this.state.origin,
+            name: this.state.image.user.name,
+            originID: this.state.image.user.originID,
+        }
+        try {
+            await this.api.postUserUnwanted(body);
+        } catch (error) {
+            this.setState({ modalVisibility: true, modalMessage: `${error}` });
+        }
+    }
+
     private setPage = (page: number) => {
         this.image(page);
     }
@@ -140,13 +153,17 @@ export default class Index extends Component<IndexProps, IndexState> {
                                             <Table.Cell>{tag.name}</Table.Cell>
                                             <Table.Cell>{tag.origin}</Table.Cell>
                                             <Table.Cell>{tag.creationDate}</Table.Cell>
-                                            <Table.Cell><Button color="error" onPress={() => { this.postTagUnwanted(tag.name) }} auto>BAN TAG</Button></Table.Cell>
-                                            <Table.Cell><Button color="success" onPress={() => { this.postTagWanted(tag.name) }} auto>ADD TAG</Button></Table.Cell>
+                                            <Table.Cell><Button color="error" onPress={() => { this.postTagUnwanted(tag.name) }} auto css={{ color: "black"}}>BAN TAG</Button></Table.Cell>
+                                            <Table.Cell><Button color="success" onPress={() => { this.postTagWanted(tag.name) }} auto css={{ color: "black"}}>ADD TAG</Button></Table.Cell>
                                         </Table.Row>)}
                                 </Table.Body>
                             </Table> :
                             <></>
                         }
+                        <div>UserID: {this.state.image.user.originID}</div>
+                        <div>UserName: {this.state.image.user.name}</div>
+                        <Button shadow color="error" auto onPress={this.postUserUnwanted} css={{ color: "black"}}>REMOVE USER</Button>
+                        <Button shadow color="error" auto onPress={this.deleteImage} css={{ color: "black"}}>REMOVE IMAGE</Button>
                     </> :
                     <></>
                 }
@@ -167,8 +184,6 @@ export default class Index extends Component<IndexProps, IndexState> {
                         </Button>
                     </Modal.Footer>
                 </Modal>
-
-                <Button shadow color="error" auto onPress={this.deleteImage}>REMOVE IMAGE</Button>
             </>
         )
     }

@@ -1,5 +1,5 @@
-import { ImageSchema, TagSchema } from "@apiTypes/responseSchema";
-import { DeleteImageSchema, PostTagSchema, PutImageSchema } from "@apiTypes/requestSchema";
+import { ImageSchema, TagSchema, UserSchema } from "@apiTypes/responseSchema";
+import { DeleteImageSchema, PostTagSchema, PutImageSchema, PostUserSchema } from "@apiTypes/requestSchema";
 
 export class Api {
     public static host = process.env.NEXT_PUBLIC_API_URL;
@@ -61,7 +61,7 @@ export class Api {
         }
     }
 
-    public getTagsWanted = async (): Promise<TagSchema[] | null> => {
+    public getTagsWanted = async (): Promise<TagSchema[]> => {
         try {
             const res = await this.get(`/tags/wanted`);
             await this.checkBadStatus(res);
@@ -71,7 +71,7 @@ export class Api {
         }
     };
 
-    public getTagsUnwanted = async (): Promise<TagSchema[] | null> => {
+    public getTagsUnwanted = async (): Promise<TagSchema[]> => {
         try {
             const res = await this.get(`/tags/unwanted`);
             await this.checkBadStatus(res);
@@ -159,6 +159,38 @@ export class Api {
         try {
             const str = JSON.stringify(body);
             const res = await this.delete(`/image`, str);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    public postUserUnwanted = async (body: PostUserSchema): Promise<any> => {
+        try {
+            const str = JSON.stringify(body);
+            const res = await this.post(`/tag/unwanted`, str);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err
+        }
+
+    };
+
+    public deleteUserUnwanted = async (id: string): Promise<any> => {
+        try {
+            const res = await this.delete(`/user/unwanted/${id}`);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    public getUsersUnwanted = async (): Promise<UserSchema[]> => {
+        try {
+            const res = await this.get(`/users/unwanted`);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
