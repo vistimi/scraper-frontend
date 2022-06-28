@@ -11,7 +11,7 @@ interface IndexState {
     imageUrl: string,
     modalVisibility: boolean,
     modalMessage: string,
-    collection: string,
+    origin: string,
 }
 export default class Index extends Component<IndexProps, IndexState> {
     public static title: string = "images";
@@ -25,12 +25,12 @@ export default class Index extends Component<IndexProps, IndexState> {
             imageUrl: "",
             modalVisibility: false,
             modalMessage: "",
-            collection: "flickr",
+            origin: "flickr",
         }
     }
 
     async componentDidMount(): Promise<void> {
-        await this.getIds(this.state.collection)
+        await this.getIds(this.state.origin)
     }
 
     componentDidUpdate(prevProps: Readonly<IndexProps>, prevState: Readonly<IndexState>): void {
@@ -39,16 +39,19 @@ export default class Index extends Component<IndexProps, IndexState> {
         }
     }
 
-    private getIds = async (collection: string) => {
-        const tags = await this.api.getImageIds(collection);
-        const ids = tags.map(tag => tag._id);
-        this.setState({ ids, collection });
+    private getIds = async (origin: string) => {
+        const tags = await this.api.getImageIds(origin);
+        if (tags) {
+            const ids = tags.map(tag => tag._id);
+            this.setState({ ids, origin });
+        } else {
+            this.setState({ modalVisibility: true, modalMessage: `${origin} is empty` })
+        }
     }
 
     private image = async (page: number) => {
-        const image = await this.api.getImage(this.state.collection, this.state.ids[page - 1]);
-        console.log(this.state.collection, this.state.ids[page - 1], image)
-        this.setState({ image, imageUrl: `${this.api.hostName()}/image/file/${this.state.collection}/${image.path}` })
+        const image = await this.api.getImage(this.state.ids[page - 1]);
+        this.setState({ image, imageUrl: `${this.api.hostName()}/image/file/${this.state.origin}/${image.path}` });
     };
 
     private postTagUnwanted = async (name: string) => {
@@ -59,7 +62,7 @@ export default class Index extends Component<IndexProps, IndexState> {
         try {
             await this.api.postTagUnwanted(body);
         } catch (error) {
-            this.setState({ modalVisibility: true, modalMessage: `${error}` })
+            this.setState({ modalVisibility: true, modalMessage: `${error}` });
         }
     }
 
@@ -71,7 +74,7 @@ export default class Index extends Component<IndexProps, IndexState> {
         try {
             await this.api.postTagWanted(body);
         } catch (error) {
-            this.setState({ modalVisibility: true, modalMessage: `${error}` })
+            this.setState({ modalVisibility: true, modalMessage: `${error}` });
         }
     }
 
@@ -85,11 +88,11 @@ export default class Index extends Component<IndexProps, IndexState> {
 
     private deleteImage = async () => {
         const body: DeleteImageSchema = {
-            collection: this.state.collection,
+            origin: this.state.origin,
             id: this.state.image._id,
         }
         await this.api.deleteImage(body)
-        await this.getIds(this.state.collection)
+        await this.getIds(this.state.origin)
     }
 
     render() {
@@ -102,7 +105,7 @@ export default class Index extends Component<IndexProps, IndexState> {
                 </Button.Group>
 
                 {/* Image navigation */}
-                <Pagination total={this.state.ids.length + 1} initialPage={1} onChange={(page) => { this.setPage(page) }} />
+                <Pagination total={this.state.ids.length} initialPage={1} onChange={(page) => { this.setPage(page) }} />
 
                 {/* Image informations */}
                 {this.state.image ?

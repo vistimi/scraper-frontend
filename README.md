@@ -1,5 +1,15 @@
 # dataset-gui
 
+## install
+
+NodeJS:
+
+https://github.com/nodesource/distributions/blob/master/README.md
+
+packages:
+
+    npm i
+
 ## run
 
     npm run dev
@@ -8,12 +18,6 @@
 
     npm run lint
 
-## install
+## .env
 
-NodeJS:
-
-https://github.com/nodesource/distributions/blob/master/README.md
-
-TS:
-
-    npm install -g typescript
+    NEXT_PUBLIC_API_URL=http://localhost:8080

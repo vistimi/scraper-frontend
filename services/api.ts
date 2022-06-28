@@ -6,6 +6,7 @@ export class Api {
     public authorization: string = null;
 
     constructor() {
+        if (Api.host === null) throw new Error(`NEXT_PUBLIC_API_URL in env not defined`);
     }
 
     public hostName = (): string => {
@@ -123,9 +124,9 @@ export class Api {
         }
     };
 
-    public getImageIds = async (collection: string): Promise<TagSchema[]> => {
+    public getImageIds = async (origin: string): Promise<TagSchema[]> => {
         try {
-            const res = await this.get(`/images/id/${collection}`);
+            const res = await this.get(`/images/id/${origin}`);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
@@ -133,9 +134,9 @@ export class Api {
         }
     };
 
-    public getImage = async (collection: string, id: string): Promise<ImageSchema> => {
+    public getImage = async (id: string): Promise<ImageSchema> => {
         try {
-            const res = await this.get(`/image/${collection}/${id}`);
+            const res = await this.get(`/image/${id}`);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {

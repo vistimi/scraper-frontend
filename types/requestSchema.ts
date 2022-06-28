@@ -1,13 +1,13 @@
 import { TagSchema } from "./responseSchema";
 
 export interface PutImageSchema {
-    collection: string,
+    origin: string,
     id: string,
     tags: TagSchema[],
 }
 
 export interface DeleteImageSchema {
-    collection: string,
+    origin: string,
     id: string,
 }
 
