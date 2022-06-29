@@ -20,24 +20,40 @@ export default function Tags(props: {}) {
     }, [])
 
     const loadTagsWanted = async (api: Api) => {
-        const tagsWanted = await api.getTagsWanted();
-        setTagsWanted(tagsWanted || []);
+        try {
+            const tagsWanted = await api.getTagsWanted();
+            setTagsWanted(tagsWanted || []);
+        } catch (error) {
+            throw error
+        }
     }
 
     const loadTagsUnwanted = async (api: Api) => {
-        const tagsUnwanted = await api.getTagsUnwanted();
-        setTagsUnwanted(tagsUnwanted || []);
+        try {
+            const tagsUnwanted = await api.getTagsUnwanted();
+            setTagsUnwanted(tagsUnwanted || []);
+        } catch (error) {
+            throw error
+        }
     }
 
 
     const deleteTagUnwanted = async (id: string) => {
-        await api.deleteTagUnwanted(id);
-        await loadTagsUnwanted(api);
+        try {
+            await api.deleteTagUnwanted(id);
+            await loadTagsUnwanted(api);
+        } catch (error) {
+            setmodalMessage(`${error}`); setModalVisibility(true);
+        }
     }
 
     const deleteTagWanted = async (id: string) => {
-        await api.deleteTagWanted(id);
-        await loadTagsWanted(api);
+        try {
+            await api.deleteTagWanted(id);
+            await loadTagsWanted(api);
+        } catch (error) {
+            setmodalMessage(`${error}`); setModalVisibility(true);
+        }
     }
 
     const addTagWanted = async (e) => {
@@ -50,10 +66,8 @@ export default function Tags(props: {}) {
                 await api.postTagWanted(body);
                 await loadTagsWanted(api);
             }
-        }
-        catch (error) {
-            setmodalMessage(`${error}`);
-            setModalVisibility(true);
+        } catch (error) {
+            setmodalMessage(`${error}`); setModalVisibility(true);
         }
     }
 
@@ -67,10 +81,8 @@ export default function Tags(props: {}) {
                 await api.postTagUnwanted(body);
                 await loadTagsUnwanted(api);
             }
-        }
-        catch (error) {
-            setmodalMessage(`${error}`);
-            setModalVisibility(true);
+        } catch (error) {
+            setmodalMessage(`${error}`); setModalVisibility(true);
         }
     }
 
@@ -100,7 +112,7 @@ export default function Tags(props: {}) {
                             <Table.Cell>{tag.name}</Table.Cell>
                             <Table.Cell>{tag.origin}</Table.Cell>
                             <Table.Cell>{tag.creationDate}</Table.Cell>
-                            <Table.Cell><Button color="error" onPress={() => { deleteTagWanted(tag._id) }} auto css={{ color: "black"}}>DELETE</Button></Table.Cell>
+                            <Table.Cell><Button color="error" onPress={() => { deleteTagWanted(tag._id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>
             </Table> :
@@ -132,7 +144,7 @@ export default function Tags(props: {}) {
                             <Table.Cell>{tag.name}</Table.Cell>
                             <Table.Cell>{tag.origin}</Table.Cell>
                             <Table.Cell>{tag.creationDate}</Table.Cell>
-                            <Table.Cell><Button color="error" onPress={() => { deleteTagUnwanted(tag._id) }} auto css={{ color: "black"}}>DELETE</Button></Table.Cell>
+                            <Table.Cell><Button color="error" onPress={() => { deleteTagUnwanted(tag._id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>
             </Table> :

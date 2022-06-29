@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Api } from "@services/api";
-import { Button, Table, Modal, Text } from '@nextui-org/react';
-import { UserSchema } from '@apiTypes/responseSchema';
+import { Button, Table, Input, Modal, Text } from '@nextui-org/react';
+import { ImageSchema, TagSchema, UserSchema } from '@apiTypes/responseSchema';
+import { DeleteImageSchema, DeleteImageUnwantedSchema, PostTagSchema } from '@apiTypes/requestSchema';
 
-export default function Users(props: {}) {
+export default function ImagesUnwanted(props: {}) {
     const api: Api = new Api();
-    const [usersUnwanted, setUsersUnwanted] = useState<UserSchema[]>([]);
+    const [imagesUnwanted, setImagesUnwanted] = useState<ImageSchema[]>([]);
     const [modalVisibility, setModalVisibility] = useState<boolean>(false);
     const [modalMessage, setmodalMessage] = useState<string>("");
 
@@ -13,37 +14,41 @@ export default function Users(props: {}) {
         (async () => {
             try {
                 const api: Api = new Api();
-                await loadUsersUnwanted(api);
+                await loadImagesUnwanted(api);
             } catch (error) {
                 setmodalMessage(`${error}`); setModalVisibility(true);
             }
         })();
     }, [])
 
-    const loadUsersUnwanted = async (api: Api) => {
+    const loadImagesUnwanted = async (api: Api) => {
         try {
-            const usersUnwanted = await api.getUsersUnwanted();
-            setUsersUnwanted(usersUnwanted || []);
+            const imagesUnwanted = await api.getImagesUnwanted();
+            setImagesUnwanted(imagesUnwanted || []);
         } catch (error) {
             throw error
         }
     }
 
 
-    const deleteUserUnwanted = async (id: string) => {
+    const deleteImageUnwanted = async (image: ImageSchema) => {
+        const body: DeleteImageUnwantedSchema = {
+            origin: image.origin,
+            id: image._id,
+        }
         try {
-            await api.deleteUserUnwanted(id);
-            await loadUsersUnwanted(api);
+            await api.deleteImageUnwanted(body);
+            await loadImagesUnwanted(api);
         } catch (error) {
             setmodalMessage(`${error}`); setModalVisibility(true);
         }
     }
 
     return <>
-        <h1>Users Unwanted</h1>
-        {usersUnwanted.length ?
+        <h1>Images Unwanted</h1>
+        {imagesUnwanted.length ?
             <Table
-                aria-label="Users Unwanted"
+                aria-label="Images Unwanted"
                 css={{
                     height: "auto",
                     minWidth: "100%",
@@ -51,19 +56,19 @@ export default function Users(props: {}) {
             >
                 <Table.Header>
                     <Table.Column>ID</Table.Column>
-                    <Table.Column>NAME</Table.Column>
                     <Table.Column>ORIGIN</Table.Column>
+                    <Table.Column>ORIGINID</Table.Column>
                     <Table.Column>CREATION</Table.Column>
                     <Table.Column>DELETE</Table.Column>
                 </Table.Header>
                 <Table.Body>
-                    {usersUnwanted.map(user =>
-                        <Table.Row key={user._id}>
-                            <Table.Cell>{user._id}</Table.Cell>
-                            <Table.Cell>{user.name}</Table.Cell>
-                            <Table.Cell>{user.origin}</Table.Cell>
-                            <Table.Cell>{user.creationDate}</Table.Cell>
-                            <Table.Cell><Button color="error" onPress={() => { deleteUserUnwanted(user._id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
+                    {imagesUnwanted.map(image =>
+                        <Table.Row key={image._id}>
+                            <Table.Cell>{image._id}</Table.Cell>
+                            <Table.Cell>{image.origin}</Table.Cell>
+                            <Table.Cell>{image.originID}</Table.Cell>
+                            <Table.Cell>{image.creationDate}</Table.Cell>
+                            <Table.Cell><Button color="error" onPress={() => { deleteImageUnwanted(image) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>
             </Table> :

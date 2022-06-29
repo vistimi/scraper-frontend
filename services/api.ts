@@ -1,5 +1,5 @@
 import { ImageSchema, TagSchema, UserSchema } from "@apiTypes/responseSchema";
-import { DeleteImageSchema, PostTagSchema, PutImageSchema, PostUserSchema } from "@apiTypes/requestSchema";
+import { DeleteImageSchema, PostTagSchema, PutImageSchema, PostUserSchema, PostImageUnwantedSchema, DeleteImageUnwantedSchema } from "@apiTypes/requestSchema";
 
 export class Api {
     public static host = process.env.NEXT_PUBLIC_API_URL;
@@ -169,7 +169,7 @@ export class Api {
     public postUserUnwanted = async (body: PostUserSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.post(`/tag/unwanted`, str);
+            const res = await this.post(`/user/unwanted`, str);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
@@ -191,6 +191,39 @@ export class Api {
     public getUsersUnwanted = async (): Promise<UserSchema[]> => {
         try {
             const res = await this.get(`/users/unwanted`);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    public postImageUnwanted = async (body: PostImageUnwantedSchema): Promise<any> => {
+        try {
+            const str = JSON.stringify(body);
+            const res = await this.post(`/image/unwanted`, str);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err
+        }
+
+    };
+
+    public deleteImageUnwanted = async (body: DeleteImageUnwantedSchema): Promise<any> => {
+        try {
+            const str = JSON.stringify(body);
+            const res = await this.delete(`/image/unwanted`, str);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    public getImagesUnwanted = async (): Promise<ImageSchema[]> => {
+        try {
+            const res = await this.get(`/images/unwanted`);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {

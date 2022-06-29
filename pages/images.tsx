@@ -2,7 +2,7 @@ import React, { Component, useEffect } from 'react';
 import { Api } from "@services/api";
 import { Button, Image, Text, Pagination, Modal, Loading, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
-import { DeleteImageSchema, PostTagSchema, PostUserSchema } from '@apiTypes/requestSchema';
+import { DeleteImageSchema, PostImageUnwantedSchema, PostTagSchema, PostUserSchema } from '@apiTypes/requestSchema';
 
 interface IndexProps { }
 interface IndexState {
@@ -50,8 +50,12 @@ export default class Index extends Component<IndexProps, IndexState> {
     }
 
     private image = async (page: number) => {
-        const image = await this.api.getImage(this.state.ids[page - 1]);
-        this.setState({ image, imageUrl: `${this.api.hostName()}/image/file/${this.state.origin}/${image.path}` });
+        try {
+            const image = await this.api.getImage(this.state.ids[page - 1]);
+            this.setState({ image, imageUrl: `${this.api.hostName()}/image/file/${this.state.origin}/${image.path}` });
+        } catch (error) {
+            this.setState({ modalVisibility: true, modalMessage: `${error}` });
+        }
     };
 
     private postTagUnwanted = async (name: string) => {
@@ -100,11 +104,17 @@ export default class Index extends Component<IndexProps, IndexState> {
     };
 
     private deleteImage = async () => {
-        const body: DeleteImageSchema = {
+        const bodyPostImageUnwantedSchema: PostImageUnwantedSchema = {
+            origin: this.state.origin,
+            originID: this.state.image.originID,
+        }
+        await this.api.postImageUnwanted(bodyPostImageUnwantedSchema)
+
+        const bodyDeleteImageSchema: DeleteImageSchema = {
             origin: this.state.origin,
             id: this.state.image._id,
         }
-        await this.api.deleteImage(body)
+        await this.api.deleteImage(bodyDeleteImageSchema)
         await this.getIds(this.state.origin)
     }
 
@@ -153,8 +163,8 @@ export default class Index extends Component<IndexProps, IndexState> {
                                             <Table.Cell>{tag.name}</Table.Cell>
                                             <Table.Cell>{tag.origin}</Table.Cell>
                                             <Table.Cell>{tag.creationDate}</Table.Cell>
-                                            <Table.Cell><Button color="error" onPress={() => { this.postTagUnwanted(tag.name) }} auto css={{ color: "black"}}>BAN TAG</Button></Table.Cell>
-                                            <Table.Cell><Button color="success" onPress={() => { this.postTagWanted(tag.name) }} auto css={{ color: "black"}}>ADD TAG</Button></Table.Cell>
+                                            <Table.Cell><Button color="error" onPress={() => { this.postTagUnwanted(tag.name) }} auto css={{ color: "black" }}>BAN TAG</Button></Table.Cell>
+                                            <Table.Cell><Button color="success" onPress={() => { this.postTagWanted(tag.name) }} auto css={{ color: "black" }}>ADD TAG</Button></Table.Cell>
                                         </Table.Row>)}
                                 </Table.Body>
                             </Table> :
@@ -162,8 +172,8 @@ export default class Index extends Component<IndexProps, IndexState> {
                         }
                         <div>UserID: {this.state.image.user.originID}</div>
                         <div>UserName: {this.state.image.user.name}</div>
-                        <Button shadow color="error" auto onPress={this.postUserUnwanted} css={{ color: "black"}}>REMOVE USER</Button>
-                        <Button shadow color="error" auto onPress={this.deleteImage} css={{ color: "black"}}>REMOVE IMAGE</Button>
+                        <Button shadow color="error" auto onPress={this.postUserUnwanted} css={{ color: "black" }}>REMOVE USER</Button>
+                        <Button shadow color="error" auto onPress={this.deleteImage} css={{ color: "black" }}>REMOVE IMAGE</Button>
                     </> :
                     <></>
                 }

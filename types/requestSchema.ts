@@ -21,3 +21,13 @@ export interface PostUserSchema {
     name: string,
     originID: string,
 }
+
+export interface PostImageUnwantedSchema {
+    origin: string,
+    originID: string,
+}
+
+export interface DeleteImageUnwantedSchema {
+    origin: string,
+    id: string,
+}

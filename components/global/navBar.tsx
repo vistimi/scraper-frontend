@@ -17,6 +17,7 @@ export const NavBar = ({ currentPage }: NavBarProps): JSX.Element =>
             <NavButton href={"/images"} title="images" currentPage={currentPage}>Images</NavButton>
             <NavButton href={"/tags"} title="tags" currentPage={currentPage}>Tags</NavButton>
             <NavButton href={"/users"} title="users" currentPage={currentPage}>Users</NavButton>
+            <NavButton href={"/imagesUnwanted"} title="users" currentPage={currentPage}>ImagesUnwanted</NavButton>
         </Button.Group>
     </NavBarPadding>
 
