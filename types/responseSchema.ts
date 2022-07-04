@@ -5,7 +5,7 @@ export interface ImageSchema {
     originID: string,
     user: UserSchema,
     extension: string,
-    path: string,
+    name: string,
     width: number,
     height: number,
     title: string,

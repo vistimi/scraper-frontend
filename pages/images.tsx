@@ -3,6 +3,7 @@ import { Api } from "@services/api";
 import { Button, Image, Text, Pagination, Modal, Loading, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { DeleteImageSchema, PostImageUnwantedSchema, PostTagSchema, PostUserSchema } from '@apiTypes/requestSchema';
+import { ImageCropper } from '@components/global/imageCropper';
 
 interface IndexProps { }
 interface IndexState {
@@ -52,7 +53,7 @@ export default class Index extends Component<IndexProps, IndexState> {
     private image = async (page: number) => {
         try {
             const image = await this.api.getImage(this.state.ids[page - 1]);
-            this.setState({ image, imageUrl: `${this.api.hostName()}/image/file/${this.state.origin}/${image.path}` });
+            this.setState({ image, imageUrl: `${this.api.hostName()}/image/file/${this.state.origin}/${image.name}` });
         } catch (error) {
             this.setState({ modalVisibility: true, modalMessage: `${error}` });
         }
@@ -121,6 +122,9 @@ export default class Index extends Component<IndexProps, IndexState> {
     render() {
         return (
             <>
+                <br/>
+
+                {/* Image origin */}
                 <Button.Group>
                     <Button auto onPress={() => { this.getIds("flickr") }}>Flickr</Button>
                     <Button auto onPress={() => { this.getIds("unsplash") }}>Unsplash</Button>
@@ -133,11 +137,13 @@ export default class Index extends Component<IndexProps, IndexState> {
                 {/* Image informations */}
                 {this.state.image ?
                     <>
-                        <Image src={this.state.imageUrl} alt="Image" key={'file'} width={this.state.image.width} height={this.state.image.height} />
+                        <ImageCropper api={this.api} image={this.state.image}/>
+                        {/*<Image src={this.state.imageUrl} alt="Image" key={'file'} width={this.state.image.width} height={this.state.image.height} /> */}
                         <div>_id: {this.state.image._id}</div>
                         <div>originID: {this.state.image.originID}</div>
                         <div>width: {this.state.image.width}</div>
                         <div>height: {this.state.image.height}</div>
+                        <div>extension: {this.state.image.extension}</div>
                         <div>title: {this.state.image.title}</div>
                         <div>description: {this.state.image.description}</div>
                         <div>license: {this.state.image.license}</div>
