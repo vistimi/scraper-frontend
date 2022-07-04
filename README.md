@@ -1,5 +1,9 @@
 # dataset-gui
 
+GUI to visuallize and manage the scraper interactively
+
+![image_page](/images/image_page_snapshot.png)
+
 ## install
 
 NodeJS:
