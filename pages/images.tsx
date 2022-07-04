@@ -123,6 +123,8 @@ export default class Index extends Component<IndexProps, IndexState> {
         return (
             <>
                 <br/>
+
+                {/* Image origin */}
                 <Button.Group>
                     <Button auto onPress={() => { this.getIds("flickr") }}>Flickr</Button>
                     <Button auto onPress={() => { this.getIds("unsplash") }}>Unsplash</Button>

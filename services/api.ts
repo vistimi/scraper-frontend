@@ -155,6 +155,10 @@ export class Api {
         }
     };
 
+    /**
+     * putImageFile update the size of the image
+     * @param body PutImageFileSchema
+     */
     public putImageFile = async (body: PutImageFileSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);

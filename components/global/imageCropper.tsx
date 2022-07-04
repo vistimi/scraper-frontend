@@ -13,6 +13,10 @@ interface ImageCropper {
 
 export const ImageCropper = (props: ImageCropper): JSX.Element => {
     const cropperRef = useRef<HTMLImageElement>(null);
+
+    /**
+     * onCrop extracts the canvas image and send it to the backend
+     */
     const onCrop = () => {
         const imageElement: any = cropperRef?.current;
         const cropper: any = imageElement?.cropper;
@@ -23,7 +27,6 @@ export const ImageCropper = (props: ImageCropper): JSX.Element => {
         }
         props.api.putImageFile(bodyPutImageFileSchema)
     };
-
 
     return (
         <>
