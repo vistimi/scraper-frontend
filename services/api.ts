@@ -1,5 +1,5 @@
 import { ImageSchema, TagSchema, UserSchema } from "@apiTypes/responseSchema";
-import { DeleteImageSchema, PostTagSchema, PutImageSchema, PostUserSchema, PostImageUnwantedSchema, DeleteImageUnwantedSchema } from "@apiTypes/requestSchema";
+import { DeleteImageSchema, PostTagSchema, PostUserSchema, PostImageUnwantedSchema, DeleteImageUnwantedSchema, PutImageTagsSchema, PutImageFileSchema } from "@apiTypes/requestSchema";
 
 export class Api {
     public static host = process.env.NEXT_PUBLIC_API_URL;
@@ -144,10 +144,21 @@ export class Api {
         }
     };
 
-    public putImage = async (body: PutImageSchema): Promise<any> => {
+    public putImageTags = async (body: PutImageTagsSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.put(`/image`, str);
+            const res = await this.put(`/image/tags`, str);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    public putImageFile = async (body: PutImageFileSchema): Promise<any> => {
+        try {
+            const str = JSON.stringify(body);
+            const res = await this.put(`/image/file`, str);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {

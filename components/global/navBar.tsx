@@ -12,7 +12,7 @@ interface NavBarProps {
 }
 
 export const NavBar = ({ currentPage }: NavBarProps): JSX.Element =>
-    <NavBarPadding>
+    <NavBarPadding className="NavBarPadding">
         <Button.Group light>
             <NavButton href={"/images"} title="images" currentPage={currentPage}>Images</NavButton>
             <NavButton href={"/tags"} title="tags" currentPage={currentPage}>Tags</NavButton>
