@@ -3,7 +3,7 @@ import { Api } from "@services/api";
 import { Button, Image, Text, Pagination, Modal, Loading, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { DeleteImageSchema, PostImageUnwantedSchema, PostTagSchema, PostUserSchema } from '@apiTypes/requestSchema';
-import { ImageCropper } from '@components/global/imageCropper';
+import { ImageEditor } from '@components/global/imageEditor';
 
 interface IndexProps { }
 interface IndexState {
@@ -145,8 +145,7 @@ export default class Index extends Component<IndexProps, IndexState> {
                 {/* Image informations */}
                 {this.state.image ?
                     <>
-                        <ImageCropper api={this.api} image={this.state.image}/>
-                        {/*<Image src={this.state.imageUrl} alt="Image" key={'file'} width={this.state.image.width} height={this.state.image.height} /> */}
+                        <ImageEditor api={this.api} image={this.state.image}/>
                         <div>_id: {this.state.image._id}</div>
                         <div>originID: {this.state.image.originID}</div>
                         <div>width: {this.state.image.size[0].box.width}</div>

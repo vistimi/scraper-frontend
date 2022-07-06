@@ -170,6 +170,19 @@ export class Api {
         }
     };
 
+     /**
+     * getImageFile fetch the image file
+     */
+      public getImageFile = async (origin: string, name: string): Promise<any> => {
+        try {
+            const res = await this.get(`/image/file/${origin}/${name}`);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
     public deleteImage = async (body: DeleteImageSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
