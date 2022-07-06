@@ -23,6 +23,9 @@ export default function Users(props: {}) {
     const loadUsersUnwanted = async (api: Api) => {
         try {
             const usersUnwanted = await api.getUsersUnwanted();
+            if (usersUnwanted) {
+                usersUnwanted.forEach(user => user.creationDate = new Date(user.creationDate));
+            }
             setUsersUnwanted(usersUnwanted || []);
         } catch (error) {
             throw error
@@ -62,7 +65,7 @@ export default function Users(props: {}) {
                             <Table.Cell>{user._id}</Table.Cell>
                             <Table.Cell>{user.name}</Table.Cell>
                             <Table.Cell>{user.origin}</Table.Cell>
-                            <Table.Cell>{user.creationDate}</Table.Cell>
+                            <Table.Cell>{user.creationDate.toDateString()}</Table.Cell>
                             <Table.Cell><Button color="error" onPress={() => { deleteUserUnwanted(user._id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>

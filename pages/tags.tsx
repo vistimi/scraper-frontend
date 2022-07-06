@@ -22,6 +22,9 @@ export default function Tags(props: {}) {
     const loadTagsWanted = async (api: Api) => {
         try {
             const tagsWanted = await api.getTagsWanted();
+            if (tagsWanted) {
+                tagsWanted.forEach(tag => tag.creationDate = new Date(tag.creationDate));
+            }
             setTagsWanted(tagsWanted || []);
         } catch (error) {
             throw error
@@ -31,6 +34,9 @@ export default function Tags(props: {}) {
     const loadTagsUnwanted = async (api: Api) => {
         try {
             const tagsUnwanted = await api.getTagsUnwanted();
+            if (tagsUnwanted) {
+                tagsUnwanted.forEach(tag => tag.creationDate = new Date(tag.creationDate));
+            }
             setTagsUnwanted(tagsUnwanted || []);
         } catch (error) {
             throw error
@@ -110,8 +116,8 @@ export default function Tags(props: {}) {
                         <Table.Row key={tag._id}>
                             <Table.Cell>{tag._id}</Table.Cell>
                             <Table.Cell>{tag.name}</Table.Cell>
-                            <Table.Cell>{tag.origin}</Table.Cell>
-                            <Table.Cell>{tag.creationDate}</Table.Cell>
+                            <Table.Cell>{tag.origin.name}</Table.Cell>
+                            <Table.Cell>{tag.creationDate.toDateString()}</Table.Cell>
                             <Table.Cell><Button color="error" onPress={() => { deleteTagWanted(tag._id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>
@@ -142,8 +148,8 @@ export default function Tags(props: {}) {
                         <Table.Row key={tag._id}>
                             <Table.Cell>{tag._id}</Table.Cell>
                             <Table.Cell>{tag.name}</Table.Cell>
-                            <Table.Cell>{tag.origin}</Table.Cell>
-                            <Table.Cell>{tag.creationDate}</Table.Cell>
+                            <Table.Cell>{tag.origin.name}</Table.Cell>
+                            <Table.Cell>{tag.creationDate.toDateString()}</Table.Cell>
                             <Table.Cell><Button color="error" onPress={() => { deleteTagUnwanted(tag._id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>

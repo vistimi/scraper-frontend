@@ -24,6 +24,9 @@ export default function ImagesUnwanted(props: {}) {
     const loadImagesUnwanted = async (api: Api) => {
         try {
             const imagesUnwanted = await api.getImagesUnwanted();
+            if (imagesUnwanted) {
+                imagesUnwanted.forEach(image => image.creationDate = new Date(image.creationDate));
+            }
             setImagesUnwanted(imagesUnwanted || []);
         } catch (error) {
             throw error
@@ -67,7 +70,7 @@ export default function ImagesUnwanted(props: {}) {
                             <Table.Cell>{image._id}</Table.Cell>
                             <Table.Cell>{image.origin}</Table.Cell>
                             <Table.Cell>{image.originID}</Table.Cell>
-                            <Table.Cell>{image.creationDate}</Table.Cell>
+                            <Table.Cell>{image.creationDate.toDateString()}</Table.Cell>
                             <Table.Cell><Button color="error" onPress={() => { deleteImageUnwanted(image) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>

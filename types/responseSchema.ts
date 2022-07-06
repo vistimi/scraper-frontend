@@ -6,12 +6,11 @@ export interface ImageSchema {
     user: UserSchema,
     extension: string,
     name: string,
-    width: number,
-    height: number,
+    size: ImageSizeSchema[],
     title: string,
     description: string,
     license: string,
-    creationDate: string
+    creationDate: Date,
     tags: TagSchema[] | undefined,
 }
 
@@ -19,8 +18,8 @@ export interface ImageSchema {
 export interface TagSchema {
     _id: string,
     name: string,
-    origin: string,
-    creationDate: string,
+    origin: TagOriginSchema,
+    creationDate: Date,
 }
 
 export interface UserSchema {
@@ -28,5 +27,26 @@ export interface UserSchema {
     origin: string,
     name: string,
     originID: string,
-    creationDate: string,
+    creationDate: Date,
+}
+
+export interface BoxSchema {
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+}
+
+export interface ImageSizeSchema {
+    _id: string,
+    creationDate: Date,
+    box: BoxSchema,
+}
+
+export interface TagOriginSchema {
+    name: string,
+    model: string,
+    weights: string,
+    imageSizeID: string,
+    box: BoxSchema,
 }

@@ -53,6 +53,14 @@ export default class Index extends Component<IndexProps, IndexState> {
     private image = async (page: number) => {
         try {
             const image = await this.api.getImage(this.state.ids[page - 1]);
+            image.creationDate = new Date(image.creationDate);
+            if ( image.tags) {
+                image.tags.forEach(tag => tag.creationDate = new Date(tag.creationDate));
+            }
+            if ( image.size) {
+                image.size.forEach(size => size.creationDate = new Date(size.creationDate));
+                image.size.sort((a,b) => Number(b.creationDate) - Number(a.creationDate)); // most recent date first
+            }
             this.setState({ image, imageUrl: `${this.api.hostName()}/image/file/${this.state.origin}/${image.name}` });
         } catch (error) {
             this.setState({ modalVisibility: true, modalMessage: `${error}` });
@@ -141,13 +149,13 @@ export default class Index extends Component<IndexProps, IndexState> {
                         {/*<Image src={this.state.imageUrl} alt="Image" key={'file'} width={this.state.image.width} height={this.state.image.height} /> */}
                         <div>_id: {this.state.image._id}</div>
                         <div>originID: {this.state.image.originID}</div>
-                        <div>width: {this.state.image.width}</div>
-                        <div>height: {this.state.image.height}</div>
+                        <div>width: {this.state.image.size[0].box.width}</div>
+                        <div>height: {this.state.image.size[0].box.height}</div>
                         <div>extension: {this.state.image.extension}</div>
+                        <div>license: {this.state.image.license}</div>
+                        <div>creationDate: {this.state.image.creationDate.toDateString()}</div>
                         <div>title: {this.state.image.title}</div>
                         <div>description: {this.state.image.description}</div>
-                        <div>license: {this.state.image.license}</div>
-                        <div>creationDate: {`${this.state.image.creationDate}`}</div>
                         {this.state.image.tags ?
                             <Table
                                 aria-label="Tags Wanted"
@@ -167,8 +175,8 @@ export default class Index extends Component<IndexProps, IndexState> {
                                     {this.state.image.tags.map(tag =>
                                         <Table.Row key={tag.name}>
                                             <Table.Cell>{tag.name}</Table.Cell>
-                                            <Table.Cell>{tag.origin}</Table.Cell>
-                                            <Table.Cell>{tag.creationDate}</Table.Cell>
+                                            <Table.Cell>{tag.origin.name}</Table.Cell>
+                                            <Table.Cell>{tag.creationDate.toDateString()}</Table.Cell>
                                             <Table.Cell><Button color="error" onPress={() => { this.postTagUnwanted(tag.name) }} auto css={{ color: "black" }}>BAN TAG</Button></Table.Cell>
                                             <Table.Cell><Button color="success" onPress={() => { this.postTagWanted(tag.name) }} auto css={{ color: "black" }}>ADD TAG</Button></Table.Cell>
                                         </Table.Row>)}
