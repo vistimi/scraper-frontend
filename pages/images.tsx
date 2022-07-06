@@ -70,7 +70,9 @@ export default class Index extends Component<IndexProps, IndexState> {
     private postTagUnwanted = async (name: string) => {
         const body: PostTagSchema = {
             name: name,
-            origin: "gui",
+            origin: {
+                "name": "gui",
+            }
         }
         try {
             await this.api.postTagUnwanted(body);
@@ -82,7 +84,9 @@ export default class Index extends Component<IndexProps, IndexState> {
     private postTagWanted = async (name: string) => {
         const body: PostTagSchema = {
             name: name,
-            origin: "gui",
+            origin: {
+                "name": "gui",
+            }
         }
         try {
             await this.api.postTagWanted(body);

@@ -19,7 +19,9 @@ export interface DeleteImageSchema {
 
 export interface PostTagSchema {
     name: string,
-    origin: string,
+    origin: {
+        "name": string,
+    },
 }
 
 export interface PostUserSchema {
