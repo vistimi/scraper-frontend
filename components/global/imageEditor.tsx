@@ -132,10 +132,10 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 "origin": {
                     "name": tagName,
                     "box": {
-                        "x": tlx,
-                        "y": tly,
-                        "width": width,
-                        "height": height,
+                        "x": Math.round(tlx),
+                        "y": Math.round(tly),
+                        "width": Math.round(width),
+                        "height": Math.round(height),
                     }
                 }
             }],
