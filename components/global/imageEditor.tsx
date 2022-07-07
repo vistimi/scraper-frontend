@@ -4,7 +4,7 @@ import "cropperjs/dist/cropper.css";
 import { Button, Input } from "@nextui-org/react";
 import { Api } from "@services/api";
 import { ImageSchema } from '@apiTypes/responseSchema';
-import { PutImageFileSchema, PutImageTagsSchema } from "@apiTypes/requestSchema";
+import { PutImageFileSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema";
 import { Image as ImageNextUI } from "@nextui-org/react"
 import { FabricJSCanvas, useFabricJSEditor } from "fabricjs-react";
 import { fabric } from 'fabric';
@@ -86,6 +86,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
      * onCrop extracts the canvas image and send it to the backend
      */
     const onCrop = () => {
+        // TODO: check all tags and see if center of box is outside, skip it or resize the box
         const imageElement: any = cropperRef?.current;
         const cropper: any = imageElement?.cropper;
         const bodyPutImageFileSchema: PutImageFileSchema = {
@@ -98,46 +99,56 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     };
 
     const onBox = async () => {
-        try {
-            if (editor?.canvas._objects.length !== 1) {
-                alert('There is no bounding box!');
-                return;
-            }
-            if (tagName === "") {
-                alert('There is no tag name!');
-                return;
-            }
-
-            // TODO: check when box is outside the image
-            const body: PutImageTagsSchema = {
-                origin: props.image.origin,
-                id: props.image._id,
-                // @ts-ignore
-                tags: [{
-                    "name": tagName,
-                    "imageSizeID": props.image.size[0]._id,
-                    // @ts-ignore
-                    "origin": {
-                        "name": tagName,
-                        "box": {
-                            "x": Math.round(editor?.canvas._objects[0].oCoords.tl.x),
-                            "y": Math.round(editor?.canvas._objects[0].oCoords.tl.y),
-                            "width": Math.round(editor?.canvas._objects[0].oCoords.br.x - editor?.canvas._objects[0].oCoords.tl.x),
-                            "height": Math.round(editor?.canvas._objects[0].oCoords.br.y - editor?.canvas._objects[0].oCoords.tl.y),
-                        }
-                    }
-                }],
-            }
-            await props.api.putImageTags(body);
-            alert('tag added')
-        } catch (error) {
-            alert(error)
+        if (editor?.canvas._objects.length !== 1) {
+            alert('There is no bounding box!');            return;
         }
+        if (tagName === "") {
+            alert('There is no tag name!'); return;
+        }
+
+        let tlx = editor?.canvas._objects[0].oCoords.tl.x;
+        let tly = editor?.canvas._objects[0].oCoords.tl.y;
+        let brx = editor?.canvas._objects[0].oCoords.br.x;
+        let bry = editor?.canvas._objects[0].oCoords.br.y;
+        if (tlx < 0) { tlx = 0 }
+        if (tly < 0) { tly = 0 }
+        if (brx < 0) { brx = 0 }
+        if (bry < 0) { bry = 0 }
+
+        let width = brx - tlx;
+        let height = bry - tly;
+        if (width < 50 || height < 50) {
+            alert(`Width or Height is too small inside the image, below 50 px. width: ${width}, height: ${height}`); return;
+        }
+
+        const body: PutImageTagsPushSchema = {
+            origin: props.image.origin,
+            id: props.image._id,
+            // @ts-ignore
+            tags: [{
+                "name": tagName,
+                "imageSizeID": props.image.size[0]._id,
+                // @ts-ignore
+                "origin": {
+                    "name": tagName,
+                    "box": {
+                        "x": tlx,
+                        "y": tly,
+                        "width": width,
+                        "height": height,
+                    }
+                }
+            }],
+        }
+        await props.api.putImageTagsPush(body);
     }
 
     const pressEnter = async (e) => {
         if (e.key === 'Enter') {
             await onBox();
+            setTagName("");
+            e.target.value = "";
+            alert('tag added')
         }
     }
 
@@ -164,7 +175,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 </>
                 :
                 draw ?
-                    <div style={{display: "grid", justifyContent: "center" }}>
+                    <div style={{ display: "grid", justifyContent: "center" }}>
                         {/* drawing mode */}
                         <FabricJSCanvas className="sample-canvas" onReady={onReady} />
                         <button onClick={onAddRectangle}>Add Rectangle</button>

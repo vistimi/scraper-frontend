@@ -1,9 +1,15 @@
 import { TagSchema } from "./responseSchema";
 
-export interface PutImageTagsSchema {
+export interface PutImageTagsPushSchema {
     origin: string,
     id: string,
     tags: TagSchema[],
+}
+
+export interface PutImageTagsPullSchema {
+    origin: string,
+    id: string,
+    names: string[],
 }
 
 export interface PutImageFileSchema {

@@ -1,8 +1,8 @@
 import React, { Component, useEffect } from 'react';
 import { Api } from "@services/api";
-import { Button, Image, Text, Pagination, Modal, Loading, Table } from '@nextui-org/react';
+import { Button, Image, Text, Pagination, Modal, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
-import { DeleteImageSchema, PostImageUnwantedSchema, PostTagSchema, PostUserSchema } from '@apiTypes/requestSchema';
+import { DeleteImageSchema, PostImageUnwantedSchema, PostTagSchema, PostUserSchema, PutImageTagsPullSchema } from '@apiTypes/requestSchema';
 import { ImageEditor } from '@components/global/imageEditor';
 
 interface IndexProps { }
@@ -129,7 +129,20 @@ export default class Index extends Component<IndexProps, IndexState> {
         }
         await this.api.deleteImage(bodyDeleteImageSchema)
         await this.getIds(this.state.origin)
-    }
+    };
+
+    private putImageTagsPull = async (name: string) => {
+        const body: PutImageTagsPullSchema = {
+            id: this.state.image._id,
+            origin: this.state.image.origin,
+            names: [name],
+        }
+        try {
+            await this.api.putImageTagsPull(body);
+        } catch (error) {
+            this.setState({ modalVisibility: true, modalMessage: `${error}` });
+        }
+    };
 
     render() {
         return (
@@ -171,8 +184,9 @@ export default class Index extends Component<IndexProps, IndexState> {
                                     <Table.Column>NAME</Table.Column>
                                     <Table.Column>ORIGIN</Table.Column>
                                     <Table.Column>CREATION</Table.Column>
-                                    <Table.Column>DELETE</Table.Column>
-                                    <Table.Column>ADD</Table.Column>
+                                    <Table.Column>UNWANTED</Table.Column>
+                                    <Table.Column>WANTED</Table.Column>
+                                    <Table.Column>REMOVE</Table.Column>
                                 </Table.Header>
                                 <Table.Body>
                                     {this.state.image.tags.map(tag =>
@@ -180,8 +194,9 @@ export default class Index extends Component<IndexProps, IndexState> {
                                             <Table.Cell>{tag.name}</Table.Cell>
                                             <Table.Cell>{tag.origin.name}</Table.Cell>
                                             <Table.Cell>{tag.creationDate.toDateString()}</Table.Cell>
-                                            <Table.Cell><Button color="error" onPress={() => { this.postTagUnwanted(tag.name) }} auto css={{ color: "black" }}>BAN TAG</Button></Table.Cell>
-                                            <Table.Cell><Button color="success" onPress={() => { this.postTagWanted(tag.name) }} auto css={{ color: "black" }}>ADD TAG</Button></Table.Cell>
+                                            <Table.Cell><Button color="error" onPress={() => { this.postTagUnwanted(tag.name) }} auto css={{ color: "black" }}>UNWANTED TAG</Button></Table.Cell>
+                                            <Table.Cell><Button color="success" onPress={() => { this.postTagWanted(tag.name) }} auto css={{ color: "black" }}>WANTED TAG</Button></Table.Cell>
+                                            <Table.Cell><Button color="warning" onPress={() => { this.putImageTagsPull(tag.name) }} auto css={{ color: "black" }}>REMOVE TAG</Button></Table.Cell>
                                         </Table.Row>)}
                                 </Table.Body>
                             </Table> :
