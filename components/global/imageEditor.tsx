@@ -19,21 +19,28 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const cropperRef = useRef<HTMLImageElement>(null);
     const [crop, setCrop] = useState<boolean>(false);
     const [draw, setDraw] = useState<boolean>(false);
+    const [size, setSize] = useState<{ width: number, height: number }>({ width: 0, height: 0 });
     const [tagName, setTagName] = useState<string>("");
     const [date, setDate] = useState<string>("");
     const { selectedObjects, editor, onReady } = useFabricJSEditor();
+
+    useEffect(() => {
+        setDate(new Date().toISOString());
+        setSize({ width: props.image.size[0].box.width, height: props.image.size[0].box.height });
+        // setCrop(false);
+        // setDraw(false);
+    }, [props.image])
 
     useEffect(() => {
         // if canvas has a context
         if (editor?.canvas.getContext()) {
             editor?.canvas.setWidth(props.image.size[0].box.width)
             editor?.canvas.setHeight(props.image.size[0].box.height)
-            const url = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}?${date}`  // add date at the end to avoid static image in browser cache
+            const url = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}?${new Date().toISOString()}`  // add date at the end to avoid static image in browser cache
             fabric.Image.fromURL(url, function (img) {
                 // add background image
                 editor?.canvas.setBackgroundImage(img, editor?.canvas.renderAll.bind(editor?.canvas), {
-                    scaleX: editor?.canvas.width / img.width,
-                    scaleY: editor?.canvas.height / img.height
+                    crossOrigin: "*",
                 });
             });
 
@@ -63,7 +70,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 },
             });
         }
-    }, [draw, props.api, props.image, editor])
+    }, [editor, draw, props.api, props.image])
 
     const onAddRectangle = () => {
         if (editor?.canvas._objects.length < 1) {
@@ -107,7 +114,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             file: cropper.getCroppedCanvas().toDataURL().split(',')[1], // [1] remove the first part "data:image/png;base64"
         }
         props.api.putImageFile(bodyPutImageFileSchema)
-        refresh();
+        props.updateParent();
     };
 
     const onBox = async () => {
@@ -126,10 +133,10 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         if (tly < 0) { tly = 0 }    // box top outside on image top
         if (brx < 0) { brx = 0 }    // box right outside on the image left
         if (bry < 0) { bry = 0 }    // box bottom outside on the image top
-        if (tlx > props.image.size[0].box.width) { tlx = props.image.size[0].box.width }    // box left outside on the image right
-        if (tly > props.image.size[0].box.height) { tly = props.image.size[0].box.height }  // box top outside on the image right
-        if (brx > props.image.size[0].box.width) { brx = props.image.size[0].box.width }    // box right outside on the image right
-        if (bry > props.image.size[0].box.height) { bry = props.image.size[0].box.height }  // box bottom outside on the image right
+        if (tlx > size.width) { tlx = size.width }    // box left outside on the image right
+        if (tly > size.height) { tly = size.height }  // box top outside on the image right
+        if (brx > size.width) { brx = size.width }    // box right outside on the image right
+        if (bry > size.height) { bry = size.height }  // box bottom outside on the image right
 
         let width = brx - tlx;
         let height = bry - tly;
@@ -158,7 +165,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         }
         await props.api.putImageTagsPush(body);
         alert('tag added')
-        refresh();
+        props.updateParent();
     }
 
     const pressEnter = async (e) => {
@@ -173,12 +180,6 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         setTagName(e.target.value)
     }
 
-    const refresh = () => {
-        setDate(new Date().toISOString());
-        props.updateParent();
-        setCrop(false); // remove cropping mode
-    }
-
     return (
         <>
             {crop ?
@@ -186,7 +187,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     {/* cropping mode */}
                     <Cropper
                         src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}?${date}`}
-                        style={{ marginLeft: "auto", marginRight: "auto", height: props.image.size[0].box.height, width: props.image.size[0].box.width }}
+                        style={{ marginLeft: "auto", marginRight: "auto", height: size.height, width: size.width }}
                         aspectRatio={1}
                         autoCropArea={1}
                         viewMode={1}
@@ -217,8 +218,8 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                         {/* no mode */}
                         <ImageNextUI
                             src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}?${date}`}
-                            width={props.image.size[0].box.width}
-                            height={props.image.size[0].box.height}
+                            width={size.width}
+                            height={size.height}
                             alt='image'
                         />
                     </>
