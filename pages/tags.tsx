@@ -67,7 +67,9 @@ export default function Tags(props: {}) {
             if (e.key === 'Enter') {
                 const body: PostTagSchema = {
                     name: e.target.value,
-                    origin: "gui",
+                    origin: {
+                        "name": "gui",
+                    }
                 }
                 await api.postTagWanted(body);
                 await loadTagsWanted(api);
@@ -82,7 +84,9 @@ export default function Tags(props: {}) {
             if (e.key === 'Enter') {
                 const body: PostTagSchema = {
                     name: e.target.value,
-                    origin: "gui",
+                    origin: {
+                        "name": "gui",
+                    }
                 }
                 await api.postTagUnwanted(body);
                 await loadTagsUnwanted(api);

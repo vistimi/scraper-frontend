@@ -1,14 +1,21 @@
-import { TagSchema } from "./responseSchema";
+import { BoxSchema, TagSchema } from "./responseSchema";
 
-export interface PutImageTagsSchema {
+export interface PutImageTagsPushSchema {
     origin: string,
     id: string,
     tags: TagSchema[],
 }
 
+export interface PutImageTagsPullSchema {
+    origin: string,
+    id: string,
+    names: string[],
+}
+
 export interface PutImageFileSchema {
     origin: string,
     name: string,
+    box: BoxSchema,
     file: string,
 }
 
@@ -19,7 +26,9 @@ export interface DeleteImageSchema {
 
 export interface PostTagSchema {
     name: string,
-    origin: string,
+    origin: {
+        "name": string,
+    },
 }
 
 export interface PostUserSchema {

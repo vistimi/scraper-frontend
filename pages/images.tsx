@@ -1,15 +1,14 @@
 import React, { Component, useEffect } from 'react';
 import { Api } from "@services/api";
-import { Button, Image, Text, Pagination, Modal, Loading, Table } from '@nextui-org/react';
+import { Button, Image, Text, Pagination, Modal, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
-import { DeleteImageSchema, PostImageUnwantedSchema, PostTagSchema, PostUserSchema } from '@apiTypes/requestSchema';
-import { ImageCropper } from '@components/global/imageCropper';
+import { DeleteImageSchema, PostImageUnwantedSchema, PostTagSchema, PostUserSchema, PutImageTagsPullSchema } from '@apiTypes/requestSchema';
+import { ImageEditor } from '@components/global/imageEditor';
 
 interface IndexProps { }
 interface IndexState {
     ids: string[],
     image: ImageSchema,
-    imageUrl: string,
     modalVisibility: boolean,
     modalMessage: string,
     origin: string,
@@ -17,13 +16,13 @@ interface IndexState {
 export default class Index extends Component<IndexProps, IndexState> {
     public static title: string = "images";
     private api: Api = new Api();
+    private page: number = 0;
 
     constructor(props: IndexProps) {
         super(props);
         this.state = {
             ids: [],
             image: null,
-            imageUrl: "",
             modalVisibility: false,
             modalMessage: "",
             origin: "flickr",
@@ -36,7 +35,8 @@ export default class Index extends Component<IndexProps, IndexState> {
 
     componentDidUpdate(prevProps: Readonly<IndexProps>, prevState: Readonly<IndexState>): void {
         if (prevState.ids !== this.state.ids) {
-            this.image(1)
+            this.image(1);
+            this.page = 1;
         }
     }
 
@@ -61,7 +61,7 @@ export default class Index extends Component<IndexProps, IndexState> {
                 image.size.forEach(size => size.creationDate = new Date(size.creationDate));
                 image.size.sort((a,b) => Number(b.creationDate) - Number(a.creationDate)); // most recent date first
             }
-            this.setState({ image, imageUrl: `${this.api.hostName()}/image/file/${this.state.origin}/${image.name}` });
+            this.setState({ image});
         } catch (error) {
             this.setState({ modalVisibility: true, modalMessage: `${error}` });
         }
@@ -70,7 +70,9 @@ export default class Index extends Component<IndexProps, IndexState> {
     private postTagUnwanted = async (name: string) => {
         const body: PostTagSchema = {
             name: name,
-            origin: "gui",
+            origin: {
+                "name": "gui",
+            }
         }
         try {
             await this.api.postTagUnwanted(body);
@@ -82,7 +84,9 @@ export default class Index extends Component<IndexProps, IndexState> {
     private postTagWanted = async (name: string) => {
         const body: PostTagSchema = {
             name: name,
-            origin: "gui",
+            origin: {
+                "name": "gui",
+            }
         }
         try {
             await this.api.postTagWanted(body);
@@ -105,6 +109,7 @@ export default class Index extends Component<IndexProps, IndexState> {
     }
 
     private setPage = (page: number) => {
+        this.page = page;
         this.image(page);
     }
 
@@ -125,7 +130,21 @@ export default class Index extends Component<IndexProps, IndexState> {
         }
         await this.api.deleteImage(bodyDeleteImageSchema)
         await this.getIds(this.state.origin)
-    }
+    };
+
+    private putImageTagsPull = async (name: string) => {
+        const body: PutImageTagsPullSchema = {
+            id: this.state.image._id,
+            origin: this.state.image.origin,
+            names: [name],
+        }
+        try {
+            await this.api.putImageTagsPull(body);
+            await this.image(this.page)
+        } catch (error) {
+            this.setState({ modalVisibility: true, modalMessage: `${error}` });
+        }
+    };
 
     render() {
         return (
@@ -140,13 +159,12 @@ export default class Index extends Component<IndexProps, IndexState> {
                 </Button.Group>
 
                 {/* Image navigation */}
-                <Pagination total={this.state.ids.length} initialPage={1} onChange={(page) => { this.setPage(page) }} />
+                <Pagination total={this.state.ids.length} initialPage={1} onChange={(page) => { this.setPage(page) }} key='pagination'/>
 
                 {/* Image informations */}
                 {this.state.image ?
                     <>
-                        <ImageCropper api={this.api} image={this.state.image}/>
-                        {/*<Image src={this.state.imageUrl} alt="Image" key={'file'} width={this.state.image.width} height={this.state.image.height} /> */}
+                        <ImageEditor api={this.api} image={this.state.image} updateParent={async () => {await this.image(this.page)}} key='imageEditor'/>
                         <div>_id: {this.state.image._id}</div>
                         <div>originID: {this.state.image.originID}</div>
                         <div>width: {this.state.image.size[0].box.width}</div>
@@ -168,17 +186,19 @@ export default class Index extends Component<IndexProps, IndexState> {
                                     <Table.Column>NAME</Table.Column>
                                     <Table.Column>ORIGIN</Table.Column>
                                     <Table.Column>CREATION</Table.Column>
-                                    <Table.Column>DELETE</Table.Column>
-                                    <Table.Column>ADD</Table.Column>
+                                    <Table.Column>UNWANTED</Table.Column>
+                                    <Table.Column>WANTED</Table.Column>
+                                    <Table.Column>REMOVE</Table.Column>
                                 </Table.Header>
                                 <Table.Body>
-                                    {this.state.image.tags.map(tag =>
-                                        <Table.Row key={tag.name}>
+                                    {this.state.image.tags.map((tag, i) =>
+                                        <Table.Row key={i}>
                                             <Table.Cell>{tag.name}</Table.Cell>
                                             <Table.Cell>{tag.origin.name}</Table.Cell>
                                             <Table.Cell>{tag.creationDate.toDateString()}</Table.Cell>
-                                            <Table.Cell><Button color="error" onPress={() => { this.postTagUnwanted(tag.name) }} auto css={{ color: "black" }}>BAN TAG</Button></Table.Cell>
-                                            <Table.Cell><Button color="success" onPress={() => { this.postTagWanted(tag.name) }} auto css={{ color: "black" }}>ADD TAG</Button></Table.Cell>
+                                            <Table.Cell><Button color="error" onPress={() => { this.postTagUnwanted(tag.name) }} auto css={{ color: "black" }}>UNWANTED TAG</Button></Table.Cell>
+                                            <Table.Cell><Button color="success" onPress={() => { this.postTagWanted(tag.name) }} auto css={{ color: "black" }}>WANTED TAG</Button></Table.Cell>
+                                            <Table.Cell><Button color="warning" onPress={() => { this.putImageTagsPull(tag.name) }} auto css={{ color: "black" }}>REMOVE TAG</Button></Table.Cell>
                                         </Table.Row>)}
                                 </Table.Body>
                             </Table> :

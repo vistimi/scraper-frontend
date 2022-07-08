@@ -1,5 +1,5 @@
 import { ImageSchema, TagSchema, UserSchema } from "@apiTypes/responseSchema";
-import { DeleteImageSchema, PostTagSchema, PostUserSchema, PostImageUnwantedSchema, DeleteImageUnwantedSchema, PutImageTagsSchema, PutImageFileSchema } from "@apiTypes/requestSchema";
+import { DeleteImageSchema, PostTagSchema, PostUserSchema, PostImageUnwantedSchema, PutImageTagsPushSchema, PutImageTagsPullSchema, DeleteImageUnwantedSchema, PutImageFileSchema } from "@apiTypes/requestSchema";
 
 export class Api {
     public static host = process.env.NEXT_PUBLIC_API_URL;
@@ -144,10 +144,21 @@ export class Api {
         }
     };
 
-    public putImageTags = async (body: PutImageTagsSchema): Promise<any> => {
+    public putImageTagsPush = async (body: PutImageTagsPushSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.put(`/image/tags`, str);
+            const res = await this.put(`/image/tags/push`, str);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    public putImageTagsPull = async (body: PutImageTagsPullSchema): Promise<any> => {
+        try {
+            const str = JSON.stringify(body);
+            const res = await this.put(`/image/tags/pull`, str);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
@@ -163,6 +174,19 @@ export class Api {
         try {
             const str = JSON.stringify(body);
             const res = await this.put(`/image/file`, str);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+     /**
+     * getImageFile fetch the image file
+     */
+      public getImageFile = async (origin: string, name: string): Promise<any> => {
+        try {
+            const res = await this.get(`/image/file/${origin}/${name}`);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
