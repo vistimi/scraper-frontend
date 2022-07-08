@@ -1,4 +1,4 @@
-import { TagSchema } from "./responseSchema";
+import { BoxSchema, TagSchema } from "./responseSchema";
 
 export interface PutImageTagsPushSchema {
     origin: string,
@@ -15,6 +15,7 @@ export interface PutImageTagsPullSchema {
 export interface PutImageFileSchema {
     origin: string,
     name: string,
+    box: BoxSchema,
     file: string,
 }
 

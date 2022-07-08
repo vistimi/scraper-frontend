@@ -11,7 +11,8 @@ import { fabric } from 'fabric';
 
 interface ImageEditorProps {
     api: Api,
-    image: ImageSchema
+    image: ImageSchema,
+    updateParent: () => void,
 }
 
 export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
@@ -19,6 +20,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const [crop, setCrop] = useState<boolean>(false);
     const [draw, setDraw] = useState<boolean>(false);
     const [tagName, setTagName] = useState<string>("");
+    const [date, setDate] = useState<string>("");
     const { selectedObjects, editor, onReady } = useFabricJSEditor();
 
     useEffect(() => {
@@ -26,7 +28,8 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         if (editor?.canvas.getContext()) {
             editor?.canvas.setWidth(props.image.size[0].box.width)
             editor?.canvas.setHeight(props.image.size[0].box.height)
-            fabric.Image.fromURL(`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}`, function (img) {
+            const url = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}?${date}`  // add date at the end to avoid static image in browser cache
+            fabric.Image.fromURL(url, function (img) {
                 // add background image
                 editor?.canvas.setBackgroundImage(img, editor?.canvas.renderAll.bind(editor?.canvas), {
                     scaleX: editor?.canvas.width / img.width,
@@ -86,21 +89,30 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
      * onCrop extracts the canvas image and send it to the backend
      */
     const onCrop = () => {
-        // TODO: check all tags and see if center of box is outside, skip it or resize the box
         const imageElement: any = cropperRef?.current;
         const cropper: any = imageElement?.cropper;
+        const tlx = cropper.cropBoxData.left;
+        const tly = cropper.cropBoxData.top;
+        const width = cropper.cropBoxData.width;
+        const height = cropper.cropBoxData.height;
         const bodyPutImageFileSchema: PutImageFileSchema = {
             origin: props.image.origin,
             name: props.image.name,
+            box: {
+                x: Math.round(tlx),
+                y: Math.round(tly),
+                width: Math.round(width),
+                height: Math.round(height),
+            },
             file: cropper.getCroppedCanvas().toDataURL().split(',')[1], // [1] remove the first part "data:image/png;base64"
         }
         props.api.putImageFile(bodyPutImageFileSchema)
-        setCrop(false)
+        refresh();
     };
 
     const onBox = async () => {
         if (editor?.canvas._objects.length !== 1) {
-            alert('There is no bounding box!');            return;
+            alert('There is no bounding box!'); return;
         }
         if (tagName === "") {
             alert('There is no tag name!'); return;
@@ -110,10 +122,14 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         let tly = editor?.canvas._objects[0].oCoords.tl.y;
         let brx = editor?.canvas._objects[0].oCoords.br.x;
         let bry = editor?.canvas._objects[0].oCoords.br.y;
-        if (tlx < 0) { tlx = 0 }
-        if (tly < 0) { tly = 0 }
-        if (brx < 0) { brx = 0 }
-        if (bry < 0) { bry = 0 }
+        if (tlx < 0) { tlx = 0 }    // box left outside on the image left
+        if (tly < 0) { tly = 0 }    // box top outside on image top
+        if (brx < 0) { brx = 0 }    // box right outside on the image left
+        if (bry < 0) { bry = 0 }    // box bottom outside on the image top
+        if (tlx > props.image.size[0].box.width) { tlx = props.image.size[0].box.width }    // box left outside on the image right
+        if (tly > props.image.size[0].box.height) { tly = props.image.size[0].box.height }  // box top outside on the image right
+        if (brx > props.image.size[0].box.width) { brx = props.image.size[0].box.width }    // box right outside on the image right
+        if (bry > props.image.size[0].box.height) { bry = props.image.size[0].box.height }  // box bottom outside on the image right
 
         let width = brx - tlx;
         let height = bry - tly;
@@ -127,10 +143,10 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             // @ts-ignore
             tags: [{
                 "name": tagName,
-                "imageSizeID": props.image.size[0]._id,
                 // @ts-ignore
                 "origin": {
                     "name": tagName,
+                    "imageSizeID": props.image.size[0]._id,
                     "box": {
                         "x": Math.round(tlx),
                         "y": Math.round(tly),
@@ -141,6 +157,8 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             }],
         }
         await props.api.putImageTagsPush(body);
+        alert('tag added')
+        refresh();
     }
 
     const pressEnter = async (e) => {
@@ -148,12 +166,17 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             await onBox();
             setTagName("");
             e.target.value = "";
-            alert('tag added')
         }
     }
 
     const changeName = async (e) => {
         setTagName(e.target.value)
+    }
+
+    const refresh = () => {
+        setDate(new Date().toISOString());
+        props.updateParent();
+        setCrop(false); // remove cropping mode
     }
 
     return (
@@ -162,7 +185,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 <>
                     {/* cropping mode */}
                     <Cropper
-                        src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}`}
+                        src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}?${date}`}
                         style={{ marginLeft: "auto", marginRight: "auto", height: props.image.size[0].box.height, width: props.image.size[0].box.width }}
                         aspectRatio={1}
                         autoCropArea={1}
@@ -180,14 +203,20 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                         <FabricJSCanvas className="sample-canvas" onReady={onReady} />
                         <button onClick={onAddRectangle}>Add Rectangle</button>
                         <br />
-                        <Input placeholder="Tag Name" css={{ display: "grid", justifyContent: "center" }} onChange={changeName} onKeyDown={pressEnter} />
+                        <Input
+                            placeholder="Tag Name"
+                            css={{ display: "grid", justifyContent: "center" }}
+                            onChange={changeName}
+                            onKeyDown={pressEnter}
+                            aria-label="TagName"
+                        />
                         <br />
                     </div>
                     :
                     <>
                         {/* no mode */}
                         <ImageNextUI
-                            src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}`}
+                            src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}?${date}`}
                             width={props.image.size[0].box.width}
                             height={props.image.size[0].box.height}
                             alt='image'
