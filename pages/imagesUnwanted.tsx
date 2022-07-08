@@ -34,13 +34,9 @@ export default function ImagesUnwanted(props: {}) {
     }
 
 
-    const deleteImageUnwanted = async (image: ImageSchema) => {
-        const body: DeleteImageUnwantedSchema = {
-            origin: image.origin,
-            id: image._id,
-        }
+    const deleteImageUnwanted = async (id: string) => {
         try {
-            await api.deleteImageUnwanted(body);
+            await api.deleteImageUnwanted(id);
             await loadImagesUnwanted(api);
         } catch (error) {
             setmodalMessage(`${error}`); setModalVisibility(true);
@@ -71,7 +67,7 @@ export default function ImagesUnwanted(props: {}) {
                             <Table.Cell>{image.origin}</Table.Cell>
                             <Table.Cell>{image.originID}</Table.Cell>
                             <Table.Cell>{image.creationDate.toDateString()}</Table.Cell>
-                            <Table.Cell><Button color="error" onPress={() => { deleteImageUnwanted(image) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
+                            <Table.Cell><Button color="error" onPress={() => { deleteImageUnwanted(image._id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>
             </Table> :
