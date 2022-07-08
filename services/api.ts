@@ -194,10 +194,9 @@ export class Api {
         }
     };
 
-    public deleteImage = async (body: DeleteImageSchema): Promise<any> => {
+    public deleteImage = async (id: string): Promise<any> => {
         try {
-            const str = JSON.stringify(body);
-            const res = await this.delete(`/image`, str);
+            const res = await this.delete(`/image/${id}`);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
@@ -249,10 +248,9 @@ export class Api {
 
     };
 
-    public deleteImageUnwanted = async (body: DeleteImageUnwantedSchema): Promise<any> => {
+    public deleteImageUnwanted = async (id: string): Promise<any> => {
         try {
-            const str = JSON.stringify(body);
-            const res = await this.delete(`/image/unwanted`, str);
+            const res = await this.delete(`/image/unwanted/${id}`);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {

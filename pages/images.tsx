@@ -123,12 +123,7 @@ export default class Index extends Component<IndexProps, IndexState> {
             originID: this.state.image.originID,
         }
         await this.api.postImageUnwanted(bodyPostImageUnwantedSchema)
-
-        const bodyDeleteImageSchema: DeleteImageSchema = {
-            origin: this.state.origin,
-            id: this.state.image._id,
-        }
-        await this.api.deleteImage(bodyDeleteImageSchema)
+        await this.api.deleteImage(this.state.image._id)
         await this.getIds(this.state.origin)
     };
 
