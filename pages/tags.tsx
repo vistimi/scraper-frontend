@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Api } from "@services/api";
-import { Button, Table, Input, Modal, Text } from '@nextui-org/react';
+import { Button, Table, Input } from '@nextui-org/react';
 import { TagSchema } from '@apiTypes/responseSchema';
 import { PostTagSchema } from '@apiTypes/requestSchema';
+import { ModalError } from '@components/global/modal';
 
 export default function Tags(props: {}) {
     const api: Api = new Api();
     const [tagsWanted, setTagsWanted] = useState<TagSchema[]>([]);
     const [tagsUnwanted, setTagsUnwanted] = useState<TagSchema[]>([]);
-    const [modalVisibility, setModalVisibility] = useState<boolean>(false);
-    const [modalMessage, setmodalMessage] = useState<string>("");
+    const [modal, setModal] = useState<{ display: boolean, message: string }>({ display: false, message: "" });
 
     useEffect(() => {
         (async () => {
@@ -49,7 +49,7 @@ export default function Tags(props: {}) {
             await api.deleteTagUnwanted(id);
             await loadTagsUnwanted(api);
         } catch (error) {
-            setmodalMessage(`${error}`); setModalVisibility(true);
+            setModal({ display: true, message: `${error}` });
         }
     }
 
@@ -58,7 +58,7 @@ export default function Tags(props: {}) {
             await api.deleteTagWanted(id);
             await loadTagsWanted(api);
         } catch (error) {
-            setmodalMessage(`${error}`); setModalVisibility(true);
+            setModal({ display: true, message: `${error}` });
         }
     }
 
@@ -75,7 +75,7 @@ export default function Tags(props: {}) {
                 await loadTagsWanted(api);
             }
         } catch (error) {
-            setmodalMessage(`${error}`); setModalVisibility(true);
+            setModal({ display: true, message: `${error}` });
         }
     }
 
@@ -92,7 +92,7 @@ export default function Tags(props: {}) {
                 await loadTagsUnwanted(api);
             }
         } catch (error) {
-            setmodalMessage(`${error}`); setModalVisibility(true);
+            setModal({ display: true, message: `${error}` });
         }
     }
 
@@ -162,14 +162,6 @@ export default function Tags(props: {}) {
         }
 
         {/* Error Modal */}
-        <Modal closeButton aria-labelledby="modal-title" open={modalVisibility} onClose={() => { setModalVisibility(false) }}>
-            <Modal.Header>
-                <Text id="modal-title" b size={18}>Error message</Text>
-            </Modal.Header>
-            <Modal.Body>{modalMessage}</Modal.Body>
-            <Modal.Footer>
-                <Button auto flat color="error" onPress={() => { setModalVisibility(false) }}>Close</Button>
-            </Modal.Footer>
-        </Modal>
+        <ModalError {...modal}/>
     </>;
 }

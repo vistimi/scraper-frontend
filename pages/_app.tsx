@@ -6,7 +6,7 @@ import Styled from 'styled-components';
 import { NavBar } from "@components/global/navBar";
 
 export const MainPadding = Styled.span`
-    top: 80px;
+    top: 40px;
     width: 100%;
     height: calc(100% - 80px);
     position: absolute;

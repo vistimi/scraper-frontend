@@ -4,7 +4,7 @@ import "cropperjs/dist/cropper.css";
 import { Button, Input } from "@nextui-org/react";
 import { Api } from "@services/api";
 import { ImageSchema } from '@apiTypes/responseSchema';
-import { PutImageFileSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema";
+import { ImageCropSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema";
 import { Image as ImageNextUI } from "@nextui-org/react"
 import { FabricJSCanvas, useFabricJSEditor } from "fabricjs-react";
 import { fabric } from 'fabric';
@@ -93,18 +93,17 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     }
 
     /**
-     * onCrop extracts the canvas image and send it to the backend
+     * onCrop generate the body for a cropping request
      */
-    const onCrop = () => {
+    const onCrop = (): ImageCropSchema => {
         const imageElement: any = cropperRef?.current;
         const cropper: any = imageElement?.cropper;
         const tlx = cropper.cropBoxData.left;
         const tly = cropper.cropBoxData.top;
         const width = cropper.cropBoxData.width;
         const height = cropper.cropBoxData.height;
-        const bodyPutImageFileSchema: PutImageFileSchema = {
-            origin: props.image.origin,
-            name: props.image.name,
+        const bodyImageCrop: ImageCropSchema = {
+            id: props.image._id,
             box: {
                 x: Math.round(tlx),
                 y: Math.round(tly),
@@ -113,9 +112,25 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             },
             file: cropper.getCroppedCanvas().toDataURL().split(',')[1], // [1] remove the first part "data:image/png;base64"
         }
-        props.api.putImageFile(bodyPutImageFileSchema)
-        props.updateParent();
+        return bodyImageCrop
     };
+
+    /**
+     * cropCurrentImage update the size, tag boxes and file of the image
+     */
+    const cropCurrentImage = () => {
+        const body = onCrop();
+        props.api.putImageCrop(body);  // update current image
+        props.updateParent();
+    }
+
+    /**
+     * cropNewImage creates a new image from this cropping
+     */
+    const cropNewImage = () => {
+        const body = onCrop();
+        props.api.postImageCrop(body);  // create a new image
+    }
 
     const onBox = async () => {
         if (editor?.canvas._objects.length !== 1) {
@@ -195,7 +210,8 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                         ref={cropperRef}
                         guides={false}
                     />
-                    <Button auto onPress={onCrop} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP</Button>
+                    <Button auto onPress={cropCurrentImage} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP CURRENT IMAGE</Button>
+                    <Button auto onPress={cropNewImage} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP NEW IMAGE</Button>
                 </>
                 :
                 draw ?

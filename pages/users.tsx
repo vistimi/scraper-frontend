@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Api } from "@services/api";
-import { Button, Table, Modal, Text } from '@nextui-org/react';
+import { Button, Table } from '@nextui-org/react';
 import { UserSchema } from '@apiTypes/responseSchema';
+import { ModalError } from '@components/global/modal';
 
 export default function Users(props: {}) {
     const api: Api = new Api();
     const [usersUnwanted, setUsersUnwanted] = useState<UserSchema[]>([]);
-    const [modalVisibility, setModalVisibility] = useState<boolean>(false);
-    const [modalMessage, setmodalMessage] = useState<string>("");
+    const [modal, setModal] = useState<{ display: boolean, message: string }>({ display: false, message: "" });
 
     useEffect(() => {
         (async () => {
@@ -15,7 +15,7 @@ export default function Users(props: {}) {
                 const api: Api = new Api();
                 await loadUsersUnwanted(api);
             } catch (error) {
-                setmodalMessage(`${error}`); setModalVisibility(true);
+                setModal({ display: true, message: `${error}` });
             }
         })();
     }, [])
@@ -38,7 +38,7 @@ export default function Users(props: {}) {
             await api.deleteUserUnwanted(id);
             await loadUsersUnwanted(api);
         } catch (error) {
-            setmodalMessage(`${error}`); setModalVisibility(true);
+            setModal({ display: true, message: `${error}` });
         }
     }
 
@@ -74,14 +74,6 @@ export default function Users(props: {}) {
         }
 
         {/* Error Modal */}
-        <Modal closeButton aria-labelledby="modal-title" open={modalVisibility} onClose={() => { setModalVisibility(false) }}>
-            <Modal.Header>
-                <Text id="modal-title" b size={18}>Error message</Text>
-            </Modal.Header>
-            <Modal.Body>{modalMessage}</Modal.Body>
-            <Modal.Footer>
-                <Button auto flat color="error" onPress={() => { setModalVisibility(false) }}>Close</Button>
-            </Modal.Footer>
-        </Modal>
+        <ModalError {...modal} />
     </>;
 }

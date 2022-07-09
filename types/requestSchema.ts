@@ -1,5 +1,7 @@
 import { BoxSchema, TagSchema } from "./responseSchema";
 
+/** Schema for images wanted and pending */
+
 export interface PutImageTagsPushSchema {
     origin: string,
     id: string,
@@ -12,9 +14,8 @@ export interface PutImageTagsPullSchema {
     names: string[],
 }
 
-export interface PutImageFileSchema {
-    origin: string,
-    name: string,
+export interface ImageCropSchema {
+    id: string,
     box: BoxSchema,
     file: string,
 }
@@ -24,18 +25,12 @@ export interface DeleteImageSchema {
     id: string,
 }
 
-export interface PostTagSchema {
-    name: string,
-    origin: {
-        "name": string,
-    },
-}
-
-export interface PostUserSchema {
+export interface PutImageTagsPullSchema {
     origin: string,
-    name: string,
-    originID: string,
+    id: string,
+    names: string[],
 }
+/** Schema for images unwanted */
 
 export interface PostImageUnwantedSchema {
     origin: string,
@@ -45,4 +40,21 @@ export interface PostImageUnwantedSchema {
 export interface DeleteImageUnwantedSchema {
     origin: string,
     id: string,
+}
+
+/** Schema for tags */
+
+export interface PostTagSchema {
+    name: string,
+    origin: {
+        "name": string,
+    },
+}
+
+/** Schema for users */
+
+export interface PostUserSchema {
+    origin: string,
+    name: string,
+    originID: string,
 }

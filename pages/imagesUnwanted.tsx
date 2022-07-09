@@ -1,27 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { Api } from "@services/api";
-import { Button, Table, Input, Modal, Text } from '@nextui-org/react';
-import { ImageSchema, TagSchema, UserSchema } from '@apiTypes/responseSchema';
-import { DeleteImageSchema, DeleteImageUnwantedSchema, PostTagSchema } from '@apiTypes/requestSchema';
+import { Button, Table} from '@nextui-org/react';
+import { ImageSchema } from '@apiTypes/responseSchema';
+import { ModalError } from '@components/global/modal';
 
 export default function ImagesUnwanted(props: {}) {
     const api: Api = new Api();
     const [imagesUnwanted, setImagesUnwanted] = useState<ImageSchema[]>([]);
-    const [modalVisibility, setModalVisibility] = useState<boolean>(false);
-    const [modalMessage, setmodalMessage] = useState<string>("");
+    const [modal, setModal] = useState<{ display: boolean, message: string }>({ display: false, message: "" });
 
     useEffect(() => {
         (async () => {
             try {
-                const api: Api = new Api();
-                await loadImagesUnwanted(api);
+                await loadImagesUnwanted();
             } catch (error) {
-                setmodalMessage(`${error}`); setModalVisibility(true);
+                setModal({ display: true, message: `${error}` });
             }
         })();
-    }, [])
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-    const loadImagesUnwanted = async (api: Api) => {
+    const loadImagesUnwanted = async () => {
         try {
             const imagesUnwanted = await api.getImagesUnwanted();
             if (imagesUnwanted) {
@@ -37,9 +35,9 @@ export default function ImagesUnwanted(props: {}) {
     const deleteImageUnwanted = async (id: string) => {
         try {
             await api.deleteImageUnwanted(id);
-            await loadImagesUnwanted(api);
+            await loadImagesUnwanted();
         } catch (error) {
-            setmodalMessage(`${error}`); setModalVisibility(true);
+            setModal({ display: true, message: `${error}` });
         }
     }
 
@@ -75,14 +73,6 @@ export default function ImagesUnwanted(props: {}) {
         }
 
         {/* Error Modal */}
-        <Modal closeButton aria-labelledby="modal-title" open={modalVisibility} onClose={() => { setModalVisibility(false) }}>
-            <Modal.Header>
-                <Text id="modal-title" b size={18}>Error message</Text>
-            </Modal.Header>
-            <Modal.Body>{modalMessage}</Modal.Body>
-            <Modal.Footer>
-                <Button auto flat color="error" onPress={() => { setModalVisibility(false) }}>Close</Button>
-            </Modal.Footer>
-        </Modal>
+        <ModalError {...modal}/>
     </>;
 }
