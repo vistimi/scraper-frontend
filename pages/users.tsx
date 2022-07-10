@@ -4,7 +4,7 @@ import { Button, Table } from '@nextui-org/react';
 import { UserSchema } from '@apiTypes/responseSchema';
 import { ModalError } from '@components/global/modal';
 
-export default function Users(props: {}) {
+export default function Users() {
     const api: Api = new Api();
     const [usersUnwanted, setUsersUnwanted] = useState<UserSchema[]>([]);
     const [modal, setModal] = useState<{ display: boolean, message: string }>({ display: false, message: "" });

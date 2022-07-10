@@ -4,7 +4,7 @@ import { Button, Table} from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { ModalError } from '@components/global/modal';
 
-export default function ImagesUnwanted(props: {}) {
+export default function ImagesUnwanted() {
     const api: Api = new Api();
     const [imagesUnwanted, setImagesUnwanted] = useState<ImageSchema[]>([]);
     const [modal, setModal] = useState<{ display: boolean, message: string }>({ display: false, message: "" });

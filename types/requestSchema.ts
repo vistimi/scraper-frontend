@@ -30,9 +30,17 @@ export interface PutImageTagsPullSchema {
     id: string,
     names: string[],
 }
+
+export interface PostImageTransfer {
+    originID: string,
+    from: string,
+    to: string,
+}
+
 /** Schema for images unwanted */
 
 export interface PostImageUnwantedSchema {
+    _id: string,
     origin: string,
     originID: string,
 }

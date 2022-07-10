@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Api } from "@services/api";
-import { Button, Pagination, Table } from '@nextui-org/react';
+import { Button, Pagination, Image, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
-import { PostImageTransfer, PostImageUnwantedSchema, PostTagSchema, PostUserSchema, PutImageTagsPullSchema } from '@apiTypes/requestSchema';
-import { ImageEditor } from '@components/image/imageEditor';
 import { ModalError } from '@components/global/modal';
+import { PostImageTransfer } from '@apiTypes/requestSchema';
 
-export default function ImagesPending() {
+export default function ImagesWanted() {
     const api: Api = new Api();
-    const collection: string = 'pending';   // name of the db collection
+    const collection: string = 'wanted';    // name of the db collection
 
     const [ids, setIds] = useState<string[]>([]);
     const [image, setImage] = useState<ImageSchema>(null);
@@ -35,7 +34,7 @@ export default function ImagesPending() {
      */
     const getIDs = async (origin: string) => {
         const ids = await api.getImageIds(origin, collection);
-        if (ids.length) {
+        if (ids) {
             setIds(ids.map(tag => tag._id));
             setOrigin(origin);
         } else {
@@ -62,81 +61,11 @@ export default function ImagesPending() {
         }
     };
 
-    const postTagUnwanted = async (name: string) => {
-        const body: PostTagSchema = {
-            name: name,
-            origin: {
-                "name": "gui",
-            }
-        }
-        try {
-            await api.postTagUnwanted(body);
-            await getIDs(origin);
-        } catch (error) {
-            setModal({ display: true, message: `${error}` });
-        }
-    }
-
-    const postTagWanted = async (name: string) => {
-        const body: PostTagSchema = {
-            name: name,
-            origin: {
-                "name": "gui",
-            }
-        }
-        try {
-            await api.postTagWanted(body);
-        } catch (error) {
-            setModal({ display: true, message: `${error}` });
-        }
-    }
-
-    const postUserUnwanted = async () => {
-        const body: PostUserSchema = {
-            origin: origin,
-            name: image.user.name,
-            originID: image.user.originID,
-        }
-        try {
-            await api.postUserUnwanted(body);
-            await getIDs(origin);
-        } catch (error) {
-            setModal({ display: true, message: `${error}` });
-        }
-    }
-
-    const deleteImage = async () => {
-        const bodyPostImageUnwantedSchema: PostImageUnwantedSchema = {
-            _id: image._id,
-            origin: origin,
-            originID: image.originID,
-        }
-        await api.postImageUnwanted(bodyPostImageUnwantedSchema);   // insert unwanted image
-        await api.deleteImage(image._id);   // delete pending image
-        setPage(page - 1);
-        await getIDs(origin);
-    };
-
-    const putImageTagsPull = async (name: string) => {
-        const body: PutImageTagsPullSchema = {
-            id: image._id,
-            origin: image.origin,
-            names: [name],
-        }
-        try {
-            await api.putImageTagsPull(body);
-            await imageFromPage(page);
-        } catch (error) {
-            setModal({ display: true, message: `${error}` });
-        }
-    };
-
-
     const postImageTransfer = async () => {
         const body: PostImageTransfer = {
             originID: image.originID,
             from: collection,
-            to: 'wanted',
+            to: 'pending',
         }
         try {
             await api.postImageTransfer(body);
@@ -146,6 +75,7 @@ export default function ImagesPending() {
             setModal({ display: true, message: `${error}` });
         }
     };
+
 
     return (
         <>
@@ -158,13 +88,18 @@ export default function ImagesPending() {
             </Button.Group>
 
             {/* Image navigation */}
-            <Pagination total={ids.length} initialPage={1} onChange={(page) => { imageFromPage(page); setPage(page) }} key='pagination' />
+            <Pagination total={ids.length} initialPage={1} onChange={(page) => { imageFromPage(page) }} key='pagination' />
 
             {/* Image informations */}
             {image ?
                 <>
-                    <ImageEditor api={api} image={image} updateParent={async () => { await imageFromPage(page) }} key='imageEditor' />
-                    <Button shadow color="success" auto onPress={postImageTransfer} css={{ color: "black" }}>WANTED IMAGE</Button>
+                    <Image
+                        src={`${api.hostName()}/image/file/${image.origin}/${image.name}?${new Date().toISOString()}`}
+                        width={image.size[0].box.width}
+                        height={image.size[0].box.height}
+                        alt='image'
+                    />
+                    <Button shadow color="error" auto onPress={postImageTransfer} css={{ color: "black" }}>PENDING IMAGE</Button>
                     <div>_id: {image._id}</div>
                     <div>originID: {image.originID}</div>
                     <div>width: {image.size[0].box.width}</div>
@@ -187,9 +122,6 @@ export default function ImagesPending() {
                                 <Table.Column>NAME</Table.Column>
                                 <Table.Column>ORIGIN</Table.Column>
                                 <Table.Column>CREATION</Table.Column>
-                                <Table.Column>UNWANTED</Table.Column>
-                                <Table.Column>WANTED</Table.Column>
-                                <Table.Column>REMOVE</Table.Column>
                             </Table.Header>
                             <Table.Body>
                                 {image.tags.map((tag, i) =>
@@ -197,9 +129,6 @@ export default function ImagesPending() {
                                         <Table.Cell>{tag.name}</Table.Cell>
                                         <Table.Cell>{tag.origin.name}</Table.Cell>
                                         <Table.Cell>{tag.creationDate.toDateString()}</Table.Cell>
-                                        <Table.Cell><Button color="error" onPress={() => { postTagUnwanted(tag.name) }} auto css={{ color: "black" }}>UNWANTED TAG</Button></Table.Cell>
-                                        <Table.Cell><Button color="success" onPress={() => { postTagWanted(tag.name) }} auto css={{ color: "black" }}>WANTED TAG</Button></Table.Cell>
-                                        <Table.Cell><Button color="warning" onPress={() => { putImageTagsPull(tag.name) }} auto css={{ color: "black" }}>REMOVE TAG</Button></Table.Cell>
                                     </Table.Row>)}
                             </Table.Body>
                         </Table> :
@@ -207,8 +136,6 @@ export default function ImagesPending() {
                     }
                     <div>UserID: {image.user.originID}</div>
                     <div>UserName: {image.user.name}</div>
-                    <Button shadow color="error" auto onPress={postUserUnwanted} css={{ color: "black" }}>REMOVE USER</Button>
-                    <Button shadow color="error" auto onPress={deleteImage} css={{ color: "black" }}>REMOVE IMAGE</Button>
                 </> :
                 <></>
             }

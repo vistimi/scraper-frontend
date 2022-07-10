@@ -5,7 +5,7 @@ import { TagSchema } from '@apiTypes/responseSchema';
 import { PostTagSchema } from '@apiTypes/requestSchema';
 import { ModalError } from '@components/global/modal';
 
-export default function Tags(props: {}) {
+export default function Tags() {
     const api: Api = new Api();
     const [tagsWanted, setTagsWanted] = useState<TagSchema[]>([]);
     const [tagsUnwanted, setTagsUnwanted] = useState<TagSchema[]>([]);

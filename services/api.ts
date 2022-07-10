@@ -1,5 +1,5 @@
 import { ImageSchema, TagSchema, UserSchema } from "@apiTypes/responseSchema";
-import { PostTagSchema, PostUserSchema, PostImageUnwantedSchema, PutImageTagsPushSchema, PutImageTagsPullSchema, ImageCropSchema } from "@apiTypes/requestSchema";
+import { PostTagSchema, PostUserSchema, PostImageUnwantedSchema, PutImageTagsPushSchema, PutImageTagsPullSchema, ImageCropSchema, PostImageTransfer } from "@apiTypes/requestSchema";
 
 export class Api {
     public static host = process.env.NEXT_PUBLIC_API_URL;
@@ -129,7 +129,7 @@ export class Api {
 
     /** Routes for images wanted and pending */
 
-    public getImageIds = async (origin: string, collection: string): Promise<TagSchema[]> => {
+    public getImageIds = async (origin: string, collection: string): Promise<ImageSchema[]> => {
         try {
             const res = await this.get(`/images/id/${origin}/${collection}`);
             await this.checkBadStatus(res);
@@ -171,10 +171,10 @@ export class Api {
         }
     };
 
-    public postImageTransfer = async (body: PutImageTagsPullSchema): Promise<any> => {
+    public postImageTransfer = async (body: PostImageTransfer): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.put(`/image/transfer`, str);
+            const res = await this.post(`/image/transfer`, str);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
