@@ -76,11 +76,12 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         if (editor?.canvas._objects.length < 1) {
             const rectangle = new fabric.Rect({
                 width: 100,
-                height: 200,
+                height: 100,
                 fill: '',
                 stroke: 'green',
                 strokeWidth: 3,
                 angle: 0,
+                strokeUniform: true,
             });
             // remove the rotation point
             rectangle.controls = {
