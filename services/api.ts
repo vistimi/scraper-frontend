@@ -1,5 +1,5 @@
 import { ImageSchema, TagSchema, UserSchema } from "@apiTypes/responseSchema";
-import { DeleteImageSchema, PostTagSchema, PostUserSchema, PostImageUnwantedSchema, PutImageTagsPushSchema, PutImageTagsPullSchema, DeleteImageUnwantedSchema, PutImageFileSchema } from "@apiTypes/requestSchema";
+import { PostTagSchema, PostUserSchema, PostImageUnwantedSchema, PutImageTagsPushSchema, PutImageTagsPullSchema, ImageCropSchema, PostImageTransfer } from "@apiTypes/requestSchema";
 
 export class Api {
     public static host = process.env.NEXT_PUBLIC_API_URL;
@@ -60,6 +60,9 @@ export class Api {
             throw new Error(`${messages[Number(index)]} ${res.status}! message: ${JSON.stringify(await res.json(), null, 2)}`);
         }
     }
+
+    /** Routes for tags */
+
 
     public getTagsWanted = async (): Promise<TagSchema[]> => {
         try {
@@ -124,9 +127,11 @@ export class Api {
         }
     };
 
-    public getImageIds = async (origin: string): Promise<TagSchema[]> => {
+    /** Routes for images wanted and pending */
+
+    public getImageIds = async (origin: string, collection: string): Promise<ImageSchema[]> => {
         try {
-            const res = await this.get(`/images/id/${origin}`);
+            const res = await this.get(`/images/id/${origin}/${collection}`);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
@@ -134,9 +139,9 @@ export class Api {
         }
     };
 
-    public getImage = async (id: string): Promise<ImageSchema> => {
+    public getImage = async (id: string, collection: string): Promise<ImageSchema> => {
         try {
-            const res = await this.get(`/image/${id}`);
+            const res = await this.get(`/image/${id}/${collection}`);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
@@ -166,14 +171,40 @@ export class Api {
         }
     };
 
-    /**
-     * putImageFile update the size of the image
-     * @param body PutImageFileSchema
-     */
-    public putImageFile = async (body: PutImageFileSchema): Promise<any> => {
+    public postImageTransfer = async (body: PostImageTransfer): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.put(`/image/file`, str);
+            const res = await this.post(`/image/transfer`, str);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    /**
+     * putImageCrop update the size, tag boxes and file of a pending image
+     * @param body ImageCropSchema
+     */
+    public putImageCrop = async (body: ImageCropSchema): Promise<any> => {
+        try {
+            const str = JSON.stringify(body);
+            const res = await this.put(`/image/crop`, str);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    /**
+     * postImageCrop creates a new image when cropped
+     * @param body ImageCropSchema
+     */
+     public postImageCrop = async (body: ImageCropSchema): Promise<any> => {
+        try {
+            const str = JSON.stringify(body);
+            const res = await this.post(`/image/crop`, str);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
@@ -204,37 +235,7 @@ export class Api {
         }
     };
 
-    public postUserUnwanted = async (body: PostUserSchema): Promise<any> => {
-        try {
-            const str = JSON.stringify(body);
-            const res = await this.post(`/user/unwanted`, str);
-            await this.checkBadStatus(res);
-            return await res.json();
-        } catch (err) {
-            throw err
-        }
-
-    };
-
-    public deleteUserUnwanted = async (id: string): Promise<any> => {
-        try {
-            const res = await this.delete(`/user/unwanted/${id}`);
-            await this.checkBadStatus(res);
-            return await res.json();
-        } catch (err) {
-            throw err;
-        }
-    };
-
-    public getUsersUnwanted = async (): Promise<UserSchema[]> => {
-        try {
-            const res = await this.get(`/users/unwanted`);
-            await this.checkBadStatus(res);
-            return await res.json();
-        } catch (err) {
-            throw err;
-        }
-    };
+    /** Routes for images unwanted */
 
     public postImageUnwanted = async (body: PostImageUnwantedSchema): Promise<any> => {
         try {
@@ -261,6 +262,40 @@ export class Api {
     public getImagesUnwanted = async (): Promise<ImageSchema[]> => {
         try {
             const res = await this.get(`/images/unwanted`);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    /** Routes for unwanted users */
+
+    public getUsersUnwanted = async (): Promise<UserSchema[]> => {
+        try {
+            const res = await this.get(`/users/unwanted`);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    public postUserUnwanted = async (body: PostUserSchema): Promise<any> => {
+        try {
+            const str = JSON.stringify(body);
+            const res = await this.post(`/user/unwanted`, str);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err
+        }
+
+    };
+
+    public deleteUserUnwanted = async (id: string): Promise<any> => {
+        try {
+            const res = await this.delete(`/user/unwanted/${id}`);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {

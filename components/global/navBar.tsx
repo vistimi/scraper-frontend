@@ -14,10 +14,11 @@ interface NavBarProps {
 export const NavBar = ({ currentPage }: NavBarProps): JSX.Element =>
     <NavBarPadding className="NavBarPadding">
         <Button.Group light>
-            <NavButton href={"/images"} title="images" currentPage={currentPage}>Images</NavButton>
+            <NavButton href={"/imagesPending"} title="imagesPending" currentPage={currentPage}>ImagesPending</NavButton>
+            <NavButton href={"/imagesWanted"} title="imagesWanted" currentPage={currentPage}>ImagesWanted</NavButton>
+            <NavButton href={"/imagesUnwanted"} title="users" currentPage={currentPage}>ImagesUnwanted</NavButton>
             <NavButton href={"/tags"} title="tags" currentPage={currentPage}>Tags</NavButton>
             <NavButton href={"/users"} title="users" currentPage={currentPage}>Users</NavButton>
-            <NavButton href={"/imagesUnwanted"} title="users" currentPage={currentPage}>ImagesUnwanted</NavButton>
         </Button.Group>
     </NavBarPadding>
 
