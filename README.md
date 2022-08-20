@@ -37,6 +37,10 @@ packages:
 
     npm run lint
 
+## Docker
+
+sudo docker build -t dataset-gui-img .
+sudo docker run -it --rm --name dataset-gui-run --env-file .env dataset-gui-img
 ## .env
 
     NEXT_PUBLIC_API_URL=http://localhost:8080
