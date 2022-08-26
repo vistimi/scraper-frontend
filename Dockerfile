@@ -6,7 +6,8 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev
+# RUN npm ci --omit=dev
+RUN npm ci
 
 # Rebuild the source code only when needed, not alpine to avoid libraries pbm
 FROM node:18.8.0 AS builder
@@ -22,7 +23,7 @@ COPY . .
 RUN npm run build
 
 # Reduce installed packages to production-only.
-# RUN npm prune --production
+RUN npm prune --production
 
 # Production image, copy all the files and run next
 FROM node:18.8.0-alpine AS runner
