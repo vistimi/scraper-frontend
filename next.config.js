@@ -8,10 +8,10 @@ module.exports = {
             },
         ]
     },
-    experimental: {
-        // Enables the styled-components SWC transform
-        styledComponents: true
-    },
+    compiler: {
+        // see https://styled-components.com/docs/tooling#babel-plugin for more info on the options.
+        styledComponents: true,
+      },
     images: {
         domains: ['localhost'],
     },
