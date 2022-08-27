@@ -5,6 +5,7 @@ import { ImageSchema } from '@apiTypes/responseSchema';
 import { PostImageTransfer, PostImageUnwantedSchema, PostTagSchema, PostUserSchema, PutImageTagsPullSchema } from '@apiTypes/requestSchema';
 import { ImageEditor } from '@components/image/imageEditor';
 import { ModalError } from '@components/global/modal';
+import { NavBar } from '@components/global/navBar';
 
 export default function ImagesPending() {
     const api: Api = new Api();
@@ -149,6 +150,7 @@ export default function ImagesPending() {
 
     return (
         <>
+            <NavBar />
             <br />
             {/* Image origin */}
             <Button.Group>

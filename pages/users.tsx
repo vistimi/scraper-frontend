@@ -3,6 +3,7 @@ import { Api } from "@services/api";
 import { Button, Table } from '@nextui-org/react';
 import { UserSchema } from '@apiTypes/responseSchema';
 import { ModalError } from '@components/global/modal';
+import { NavBar } from '@components/global/navBar';
 
 export default function Users() {
     const api: Api = new Api();
@@ -43,6 +44,8 @@ export default function Users() {
     }
 
     return <>
+        <NavBar />
+
         <h1>Users Unwanted</h1>
         {usersUnwanted.length ?
             <Table

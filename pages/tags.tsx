@@ -4,6 +4,7 @@ import { Button, Table, Input } from '@nextui-org/react';
 import { TagSchema } from '@apiTypes/responseSchema';
 import { PostTagSchema } from '@apiTypes/requestSchema';
 import { ModalError } from '@components/global/modal';
+import { NavBar } from '@components/global/navBar';
 
 export default function Tags() {
     const api: Api = new Api();
@@ -97,6 +98,8 @@ export default function Tags() {
     }
 
     return <>
+        <NavBar />
+
         {/* Tags wanted deletion and addition */}
         <h1>Tags Wanted</h1>
         <Input label="Add Tag Wanted" placeholder="Tag Name" onKeyDown={addTagWanted} />
@@ -162,6 +165,6 @@ export default function Tags() {
         }
 
         {/* Error Modal */}
-        <ModalError {...modal}/>
+        <ModalError {...modal} />
     </>;
 }

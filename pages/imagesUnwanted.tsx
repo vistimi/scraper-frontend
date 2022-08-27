@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Api } from "@services/api";
-import { Button, Table} from '@nextui-org/react';
+import { Button, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { ModalError } from '@components/global/modal';
+import { NavBar } from '@components/global/navBar';
 
 export default function ImagesUnwanted() {
     const api: Api = new Api();
@@ -42,6 +43,8 @@ export default function ImagesUnwanted() {
     }
 
     return <>
+        <NavBar/>
+
         <h1>Images Unwanted</h1>
         {imagesUnwanted.length ?
             <Table
@@ -73,6 +76,6 @@ export default function ImagesUnwanted() {
         }
 
         {/* Error Modal */}
-        <ModalError {...modal}/>
+        <ModalError {...modal} />
     </>;
 }

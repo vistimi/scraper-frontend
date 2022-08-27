@@ -2,16 +2,6 @@ import React, { Component } from "react";
 import Head from "next/head";
 import { scrollbar } from "@components/global/scrollbar";
 import { NextUIProvider } from '@nextui-org/react';
-import Styled from 'styled-components';
-import { NavBar } from "@components/global/navBar";
-
-export const MainPadding = Styled.span`
-    top: 40px;
-    width: 100%;
-    height: calc(100% - 80px);
-    position: absolute;
-    left: 0;
-`;
 
 const App = ({ Component, pageProps }) => {
     return (
@@ -21,14 +11,8 @@ const App = ({ Component, pageProps }) => {
                     <title>{Component.title}</title>
                     <meta property="og:title" content={Component.title} key="title" />
                 </Head>
-
-                <NavBar currentPage={Component.title}/>
                 
-                {/* MainPadding is the NavBar spacer */}
-                <MainPadding>
-                    <Component {...pageProps} />
-                </MainPadding>
-
+                <Component {...pageProps} />
 
                 <style jsx global>{`
                         ${scrollbar}

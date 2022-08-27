@@ -4,6 +4,7 @@ import { Button, Pagination, Image, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { ModalError } from '@components/global/modal';
 import { PostImageTransfer } from '@apiTypes/requestSchema';
+import { NavBar } from '@components/global/navBar';
 
 export default function ImagesWanted() {
     const api: Api = new Api();
@@ -79,6 +80,8 @@ export default function ImagesWanted() {
 
     return (
         <>
+            <NavBar />
+
             <br />
             {/* Image origin */}
             <Button.Group>
@@ -94,7 +97,7 @@ export default function ImagesWanted() {
             {image ?
                 <>
                     <Image
-                        src={`${api.hostName()}/image/file/${image.origin}/${image.name}?${new Date().toISOString()}`}
+                        src={`${api.hostName()}/image/file/${image.origin}/${image.originID}/${image.extension}?${new Date().toISOString()}`}
                         width={image.size[0].box.width}
                         height={image.size[0].box.height}
                         alt='image'
