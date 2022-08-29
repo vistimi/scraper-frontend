@@ -7,11 +7,5 @@ module.exports = {
                 permanent: true,
             },
         ]
-    },
-    compiler: {
-        nextUi: true,
-    },
-    images: {
-        domains: ['localhost'],
-    },
+    }
 }
