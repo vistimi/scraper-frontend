@@ -50,7 +50,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 const color = 'green';
                 const rectangle = new fabric.Rect({
                     top: tag.origin.box.y,
-                    left:tag.origin.box.x,
+                    left: tag.origin.box.x,
                     width: tag.origin.box.width,
                     height: tag.origin.box.height,
                     fill: '',
@@ -66,8 +66,8 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 const fontSize = 14;
                 const block = new fabric.Rect({
                     top: tag.origin.box.y - textSpacing,
-                    left:tag.origin.box.x,
-                    width: fontSize/2*(tag.name.length + 5),
+                    left: tag.origin.box.x,
+                    width: fontSize / 2 * (tag.name.length + 5),
                     height: textSpacing,
                     fill: color,
                     stroke: color,
@@ -80,7 +80,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     fontFamily: 'Calibri',
                     fontSize: fontSize,
                     top: tag.origin.box.y - textSpacing + 2,
-                    left:tag.origin.box.x + 2,
+                    left: tag.origin.box.x + 2,
                     height: textSpacing,
                     fill: 'white',
                     selectable: false,
@@ -142,12 +142,14 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
      * onCrop generate the body for a cropping request
      */
     const onCrop = (): ImageCropSchema => {
+        if (!['jpg', 'jpeg', 'png'].includes(props.image.extension)) throw new Error(`when croping, file extension ${props.image.extension} is not appropriate`)
         const imageElement: any = cropperRef?.current;
         const cropper: any = imageElement?.cropper;
         const tlx = cropper.cropBoxData.left;
         const tly = cropper.cropBoxData.top;
         const width = cropper.cropBoxData.width;
         const height = cropper.cropBoxData.height;
+
         const bodyImageCrop: ImageCropSchema = {
             id: props.image._id,
             box: {
@@ -156,7 +158,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 width: Math.round(width),
                 height: Math.round(height),
             },
-            file: cropper.getCroppedCanvas().toDataURL().split(',')[1], // [1] remove the first part "data:image/png;base64"
+            file: cropper.getCroppedCanvas().toDataURL(['jpg', 'jpeg'].includes(props.image.extension) ? "image/jpeg" : "image/png", 1.0).split(',')[1], // [1] remove the first part "data:image/png;base64"
         }
         console.log(bodyImageCrop)
         return bodyImageCrop
