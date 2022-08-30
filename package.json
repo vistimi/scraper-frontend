@@ -4,9 +4,9 @@
     "description": "",
     "main": "index.tsx",
     "scripts": {
-        "dev": "next",
+        "dev": "env && next",
         "build": "next build",
-        "start": "next start",
+        "start": "env && next start",
         "lint": "next lint"
     },
     "dependencies": {
@@ -35,7 +35,7 @@
         "url": "git+https://github.com/KookaS/dataset-gui"
     },
     "author": "",
-    "license": "GNU",
+    "license": "ISC",
     "bugs": {
         "url": "https://github.com/KookaS/dataset-gui/issues"
     },
