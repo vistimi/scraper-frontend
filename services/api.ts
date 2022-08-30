@@ -19,8 +19,6 @@ export class Api {
         const requestOptions = {
             method: 'GET',
         }
-        console.log(`${Api.host}${path}`)
-        console.log(`${this.authorization}`)
         return await fetch(`${Api.host}${path}`, requestOptions);
     };
 
@@ -70,7 +68,7 @@ export class Api {
     /**
      * getImageFile fetch the image file
      */
-     public getImageFile = async (origin: string, originID: string, extension: string): Promise<any> => {
+    public getImageFile = async (origin: string, originID: string, extension: string): Promise<any> => {
         try {
             const res = await this.get(`/image/file/${origin}/${originID}/${extension}`);
             await this.checkBadStatus(res);
@@ -116,7 +114,7 @@ export class Api {
      * putImageCrop update the size, tag boxes and file of a pending image
      * @param body ImageCropSchema
      */
-     public putImageCrop = async (body: ImageCropSchema): Promise<any> => {
+    public putImageCrop = async (body: ImageCropSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
             const res = await this.put(`/image/crop`, str);
@@ -131,7 +129,7 @@ export class Api {
      * postImageCrop creates a new image when cropped
      * @param body ImageCropSchema
      */
-     public postImageCrop = async (body: ImageCropSchema): Promise<any> => {
+    public postImageCrop = async (body: ImageCropSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
             const res = await this.post(`/image/crop`, str);
@@ -302,9 +300,9 @@ export class Api {
         }
     };
 
-     /** Routes for unwanted users */
+    /** Routes for unwanted users */
 
-     public getUsersUnwanted = async (): Promise<UserSchema[]> => {
+    public getUsersUnwanted = async (): Promise<UserSchema[]> => {
         try {
             const res = await this.get(`/users/unwanted`);
             await this.checkBadStatus(res);
