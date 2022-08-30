@@ -158,7 +158,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 width: Math.round(width),
                 height: Math.round(height),
             },
-            file: cropper.getCroppedCanvas().toDataURL(['jpg', 'jpeg'].includes(props.image.extension) ? "image/jpeg" : "image/png", 1.0).split(',')[1], // [1] remove the first part "data:image/png;base64"
+            // file: cropper.getCroppedCanvas().toDataURL(['jpg', 'jpeg'].includes(props.image.extension) ? "image/jpeg" : "image/png", 1.0).split(',')[1], // [1] remove the first part "data:image/png;base64"
         }
         console.log(bodyImageCrop)
         return bodyImageCrop
