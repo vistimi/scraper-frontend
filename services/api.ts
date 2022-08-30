@@ -19,6 +19,8 @@ export class Api {
         const requestOptions = {
             method: 'GET',
         }
+        console.log(`${Api.host}${path}`)
+        console.log(`${this.authorization}`)
         return await fetch(`${Api.host}${path}`, requestOptions);
     };
 
