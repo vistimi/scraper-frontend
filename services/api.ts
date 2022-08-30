@@ -6,7 +6,7 @@ export class Api {
     public authorization: string = null;
 
     constructor() {
-        if (!Api.host) throw new Error(`NEXT_PUBLIC_API_URL in env not defined`);
+        if (!Api.host) console.error(`NEXT_PUBLIC_API_URL in env not defined`);
     }
 
     /** Functions general */
