@@ -158,6 +158,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             },
             file: cropper.getCroppedCanvas().toDataURL().split(',')[1], // [1] remove the first part "data:image/png;base64"
         }
+        console.log(bodyImageCrop)
         return bodyImageCrop
     };
 
