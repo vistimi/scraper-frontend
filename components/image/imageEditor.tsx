@@ -281,7 +281,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     <>
                         {/* no mode */}
                         <ImageNextUI
-                            src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}/${props.image.extension}?${date}`}
+                            src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${date}`}
                             width={size.width}
                             height={size.height}
                             alt='image'
