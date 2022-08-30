@@ -39,10 +39,8 @@ packages:
 
 ## Docker
 
-The nodejs version is 12.x.x because the canvas library fabricjs requires so for typescript
-
-    sudo docker build -t dataset-gui-img .
-    sudo docker run -it -p 3000:3000 --rm --name dataset-gui-run --env-file .env dataset-gui-img
+    sudo docker build --build-arg NEXT_PUBLIC_API_URL=http://localhost:8080 -t dataset-gui-img .
+    sudo docker run -it -p 3000:3000 --rm --name dataset-gui-run dataset-gui-img
 ## .env
 
     NEXT_PUBLIC_API_URL=http://localhost:8080

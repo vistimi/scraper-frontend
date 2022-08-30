@@ -49,4 +49,5 @@ export interface TagOriginSchema {
     weights: string,
     imageSizeID: string,
     box: BoxSchema,
+    confidence: number,
 }
