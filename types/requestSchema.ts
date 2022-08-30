@@ -17,7 +17,6 @@ export interface PutImageTagsPullSchema {
 export interface ImageCropSchema {
     id: string,
     box: BoxSchema,
-    // file: string,
 }
 
 export interface DeleteImageSchema {

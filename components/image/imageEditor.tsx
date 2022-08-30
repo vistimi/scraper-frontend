@@ -134,7 +134,6 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             editor?.canvas.add(rectangle);
             editor?.canvas.centerObject(rectangle);
             editor?.canvas.setActiveObject(editor?.canvas._objects[editor?.canvas._objects.length - 1])
-            console.log(editor?.canvas._objects)
         }
     }
 
@@ -158,9 +157,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 width: Math.round(width),
                 height: Math.round(height),
             },
-            // file: cropper.getCroppedCanvas().toDataURL(['jpg', 'jpeg'].includes(props.image.extension) ? "image/jpeg" : "image/png", 1.0).split(',')[1], // [1] remove the first part "data:image/png;base64"
         }
-        console.log(bodyImageCrop)
         return bodyImageCrop
     };
 
