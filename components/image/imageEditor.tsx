@@ -45,7 +45,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             });
 
             const tagsWithBoxes = props.image?.tags?.filter(tag => tag.origin.box && Object.keys(tag.origin.box).length !== 0 && Object.getPrototypeOf(tag.origin.box) === Object.prototype);
-            tagsWithBoxes.forEach(tag => {
+            tagsWithBoxes?.forEach(tag => {
                 const color = 'green';
                 const rectangle = new fabric.Rect({
                     top: tag.origin.box.y,
@@ -231,7 +231,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         await props.api.putImageTagsPush(body);
         alert('tag added')
         props.updateParent();
-        editor?.canvas.forEachObject((object) => { object.selectable = false });
+        editor?.canvas?.forEachObject((object) => { object.selectable = false });
     }
 
     const pressEnter = async (e) => {

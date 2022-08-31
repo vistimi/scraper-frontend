@@ -49,13 +49,9 @@ export default function ImagesPending() {
             if (ids?.length) {
                 const image = await api.getImage(ids[page - 1], collection);
                 image.creationDate = new Date(image.creationDate);
-                if (image.tags) {
-                    image.tags.forEach(tag => tag.creationDate = new Date(tag.creationDate));
-                }
-                if (image.size) {
-                    image.size.forEach(size => size.creationDate = new Date(size.creationDate));
-                    image.size.sort((a, b) => Number(b.creationDate) - Number(a.creationDate)); // most recent date first
-                }
+                image.tags?.forEach(tag => tag.creationDate = new Date(tag.creationDate));
+                image.size?.forEach(size => size.creationDate = new Date(size.creationDate));
+                image.size?.sort((a, b) => Number(b.creationDate) - Number(a.creationDate)); // most recent date first
                 setImage(image)
             }
         } catch (error) {
