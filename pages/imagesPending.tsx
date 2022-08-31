@@ -36,7 +36,7 @@ export default function ImagesPending() {
      */
     const getIDs = async (origin: string) => {
         const ids = await api.getImageIds(origin, collection);
-        if (ids.length) {
+        if (ids?.length) {
             setIds(ids.map(tag => tag._id));
             setOrigin(origin);
         } else {
@@ -46,7 +46,7 @@ export default function ImagesPending() {
 
     const imageFromPage = async (page: number) => {
         try {
-            if (ids.length) {
+            if (ids?.length) {
                 const image = await api.getImage(ids[page - 1], collection);
                 image.creationDate = new Date(image.creationDate);
                 if (image.tags) {
@@ -160,7 +160,7 @@ export default function ImagesPending() {
             </Button.Group>
 
             {/* Image navigation */}
-            <Pagination total={ids.length} initialPage={1} onChange={(page) => { imageFromPage(page); setPage(page) }} key='pagination' />
+            <Pagination total={ids?.length} initialPage={1} onChange={(page) => { imageFromPage(page); setPage(page) }} key='pagination' />
 
             {/* Image informations */}
             {image ?
