@@ -141,8 +141,8 @@ export default function ImagesPending() {
         }
         try {
             await api.postImageTransfer(body);
-            setPage(page - 1);
             await getIDs(origin);
+            setPage(page - 1);
         } catch (error) {
             setModal({ display: true, message: `${error}` });
         }

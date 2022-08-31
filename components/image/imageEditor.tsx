@@ -44,7 +44,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 });
             });
 
-            const tagsWithBoxes = props.image.tags.filter(tag => tag.origin.box && Object.keys(tag.origin.box).length !== 0 && Object.getPrototypeOf(tag.origin.box) === Object.prototype);
+            const tagsWithBoxes = props.image?.tags?.filter(tag => tag.origin.box && Object.keys(tag.origin.box).length !== 0 && Object.getPrototypeOf(tag.origin.box) === Object.prototype);
             tagsWithBoxes.forEach(tag => {
                 const color = 'green';
                 const rectangle = new fabric.Rect({
@@ -118,7 +118,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     [editor, draw, props.api, props.image])
 
     const onAddRectangle = () => {
-        if (editor?.canvas._objects.filter(object => object.selectable).length == 0) {
+        if (editor?.canvas?._objects?.filter(object => object.selectable).length == 0) {
             const rectangle = new fabric.Rect({
                 width: 100,
                 height: 100,
@@ -182,7 +182,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     }
 
     const onBox = async () => {
-        if (editor?.canvas._objects.filter(object => object.selectable).length !== 1) {
+        if (editor?.canvas?._objects?.filter(object => object.selectable).length !== 1) {
             alert('There is no bounding box!'); return;
         }
         if (tagName === "") {
