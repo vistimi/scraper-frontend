@@ -8,7 +8,6 @@ import { ImageCropSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema
 import { Image as ImageNextUI } from "@nextui-org/react"
 import { FabricJSCanvas, useFabricJSEditor } from "fabricjs-react";
 import { fabric } from 'fabric';
-import { withRouter } from "next/router";
 
 interface ImageEditorProps {
     api: Api,
@@ -112,8 +111,11 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     ctx.restore();
                 },
             });
+            onAddRectangle();
         }
-    }, [editor, draw, props.api, props.image])
+    }, 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [editor, draw, props.api, props.image])
 
     const onAddRectangle = () => {
         if (editor?.canvas._objects.filter(object => object.selectable).length == 0) {
@@ -158,6 +160,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 height: Math.round(height),
             },
         }
+        setDraw(true);
         return bodyImageCrop
     };
 
