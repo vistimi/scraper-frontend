@@ -4,9 +4,9 @@
     "description": "",
     "main": "index.tsx",
     "scripts": {
-        "dev": "env && next",
+        "dev": "next",
         "build": "next build",
-        "start": "env && next start",
+        "start": "next start",
         "lint": "next lint"
     },
     "dependencies": {
