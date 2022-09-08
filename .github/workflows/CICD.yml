@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [master]
+    branches: [production, staging, dev]
   pull_request:
     types: [opened, edited, synchronize, reopened]
 
@@ -36,6 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production # production secret env variables
     if: github.event_name != 'pull_request'
+    if: github.base_ref_branch == 'production'
 
     steps:
       - name: Checkout
