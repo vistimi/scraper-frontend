@@ -2,12 +2,12 @@ name: Linter
 
 on:
   push:
-    branches: [master]
+    branches: [master, dev]
   pull_request:
     types: [opened, edited, synchronize, reopened]
 
 jobs:
-  Explore-GitHub-Actions:
+  NextLinter:
     runs-on: ubuntu-latest
     steps:
       - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
