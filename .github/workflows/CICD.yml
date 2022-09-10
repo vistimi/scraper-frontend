@@ -35,7 +35,7 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     environment: production # production secret env variables
-    if: github.event_name != 'pull_request' && github.base_ref_branch == 'production'
+    if: github.base_ref_branch == 'production'
 
     steps:
       - name: Checkout
