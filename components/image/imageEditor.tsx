@@ -19,19 +19,23 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const cropperRef = useRef<HTMLImageElement>(null);
     const [crop, setCrop] = useState<boolean>(false);
     const [draw, setDraw] = useState<boolean>(false);
-    const [size, setSize] = useState<{ width: number, height: number }>({ width: 0, height: 0 });
     const [tagName, setTagName] = useState<string>("");
-    const [date, setDate] = useState<string>("");
     const { selectedObjects, editor, onReady } = useFabricJSEditor();
+    const date = new Date().toISOString();
 
     useEffect(() => {
-        setDate(new Date().toISOString());
-        setSize({ width: props.image.size[0].box.width, height: props.image.size[0].box.height });
-        // setCrop(false);
-        // setDraw(false);
-    }, [props.image])
+        editor?.canvas?.remove(...editor?.canvas?._objects)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [props.image, props.api])
 
     useEffect(() => {
+        loadRectangles()
+    }, 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [editor])
+
+    const loadRectangles = () => {
         // if canvas has a context
         if (editor?.canvas.getContext()) {
             editor?.canvas.setWidth(props.image.size[0].box.width)
@@ -113,9 +117,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             });
             onAddRectangle();
         }
-    }, 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [editor, draw, props.api, props.image])
+    }
 
     const onAddRectangle = () => {
         if (editor?.canvas?._objects?.filter(object => object.selectable).length == 0) {
@@ -197,10 +199,10 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         if (tly < 0) { tly = 0 }    // box top outside on image top
         if (brx < 0) { brx = 0 }    // box right outside on the image left
         if (bry < 0) { bry = 0 }    // box bottom outside on the image top
-        if (tlx > size.width) { tlx = size.width }    // box left outside on the image right
-        if (tly > size.height) { tly = size.height }  // box top outside on the image right
-        if (brx > size.width) { brx = size.width }    // box right outside on the image right
-        if (bry > size.height) { bry = size.height }  // box bottom outside on the image right
+        if (tlx > props.image.size[0].box.width) { tlx = props.image.size[0].box.width }    // box left outside on the image right
+        if (tly > props.image.size[0].box.height) { tly = props.image.size[0].box.height }  // box top outside on the image right
+        if (brx > props.image.size[0].box.width) { brx = props.image.size[0].box.width }    // box right outside on the image right
+        if (bry > props.image.size[0].box.height) { bry = props.image.size[0].box.height }  // box bottom outside on the image right
 
         let width = brx - tlx;
         let height = bry - tly;
@@ -253,7 +255,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     {/* cropping mode */}
                     <Cropper
                         src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}.${props.image.extension}?${date}`}
-                        style={{ marginLeft: "auto", marginRight: "auto", height: size.height, width: size.width }}
+                        style={{ marginLeft: "auto", marginRight: "auto", height: props.image.size[0].box.height, width: props.image.size[0].box.width }}
                         aspectRatio={1}
                         autoCropArea={1}
                         viewMode={1}
@@ -285,8 +287,8 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                         {/* no mode */}
                         <ImageNextUI
                             src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}.${props.image.extension}?${date}`}
-                            width={size.width}
-                            height={size.height}
+                            width={props.image.size[0].box.width}
+                            height={props.image.size[0].box.height}
                             alt='image'
                         />
                     </>
