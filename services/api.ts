@@ -70,7 +70,7 @@ export class Api {
      */
     public getImageFile = async (origin: string, originID: string, extension: string): Promise<any> => {
         try {
-            const res = await this.get(`/image/file/${origin}/${originID}/${extension}`);
+            const res = await this.get(`/image/file/${origin}/${originID}.${extension}`);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
