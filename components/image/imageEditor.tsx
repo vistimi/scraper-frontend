@@ -24,16 +24,19 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const date = new Date().toISOString();
 
     useEffect(() => {
-        editor?.canvas?.remove(...editor?.canvas?._objects)
+        // default and drawing mode
+        if (!crop) {
+            editor?.canvas?.remove(...editor?.canvas?._objects)
+        }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [props.image, props.api])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [props.image, props.api])
 
     useEffect(() => {
         loadRectangles()
-    }, 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [editor])
+    },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [editor])
 
     const loadRectangles = () => {
         // if canvas has a context
@@ -91,35 +94,40 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 editor?.canvas.add(text);
             });
 
-            const deleteImage = new Image();
-            var deleteIcon = "data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3E%3Csvg version='1.1' id='Ebene_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' width='595.275px' height='595.275px' viewBox='200 215 230 470' xml:space='preserve'%3E%3Ccircle style='fill:%23F44336;' cx='299.76' cy='439.067' r='218.516'/%3E%3Cg%3E%3Crect x='267.162' y='307.978' transform='matrix(0.7071 -0.7071 0.7071 0.7071 -222.6202 340.6915)' style='fill:white;' width='65.545' height='262.18'/%3E%3Crect x='266.988' y='308.153' transform='matrix(0.7071 0.7071 -0.7071 0.7071 398.3889 -83.3116)' style='fill:white;' width='65.544' height='262.179'/%3E%3C/g%3E%3C/svg%3E";
-            deleteImage.src = deleteIcon;
-            fabric.Object.prototype.controls.deleteControl = new fabric.Control({
-                x: 0.5,
-                y: -0.5,
-                offsetY: 16,
-                cursorStyle: 'pointer',
-                mouseUpHandler: (eventData, transformData, x, y): boolean => {
-                    var target = transformData.target;
-                    var canvas = target.canvas;
-                    canvas.remove(target);
-                    canvas.requestRenderAll();
-                    return true
-                },
-                render: (ctx, left, top, styleOverride, fabricObject) => {
-                    var size = 24;
-                    ctx.save();
-                    ctx.translate(left, top);
-                    ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
-                    ctx.drawImage(deleteImage, -size / 2, -size / 2, size, size);
-                    ctx.restore();
-                },
-            });
-            onAddRectangle();
+            // drawing mode only
+            if (draw) {
+                console.log(crop)
+                const deleteImage = new Image();
+                var deleteIcon = "data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3E%3Csvg version='1.1' id='Ebene_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' width='595.275px' height='595.275px' viewBox='200 215 230 470' xml:space='preserve'%3E%3Ccircle style='fill:%23F44336;' cx='299.76' cy='439.067' r='218.516'/%3E%3Cg%3E%3Crect x='267.162' y='307.978' transform='matrix(0.7071 -0.7071 0.7071 0.7071 -222.6202 340.6915)' style='fill:white;' width='65.545' height='262.18'/%3E%3Crect x='266.988' y='308.153' transform='matrix(0.7071 0.7071 -0.7071 0.7071 398.3889 -83.3116)' style='fill:white;' width='65.544' height='262.179'/%3E%3C/g%3E%3C/svg%3E";
+                deleteImage.src = deleteIcon;
+                fabric.Object.prototype.controls.deleteControl = new fabric.Control({
+                    x: 0.5,
+                    y: -0.5,
+                    offsetY: 16,
+                    cursorStyle: 'pointer',
+                    mouseUpHandler: (eventData, transformData, x, y): boolean => {
+                        var target = transformData.target;
+                        var canvas = target.canvas;
+                        canvas.remove(target);
+                        canvas.requestRenderAll();
+                        return true
+                    },
+                    render: (ctx, left, top, styleOverride, fabricObject) => {
+                        var size = 24;
+                        ctx.save();
+                        ctx.translate(left, top);
+                        ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
+                        ctx.drawImage(deleteImage, -size / 2, -size / 2, size, size);
+                        ctx.restore();
+                    },
+                });
+                onAddRectangle();
+            }
         }
     }
 
     const onAddRectangle = () => {
+        console.log('ADD RECT')
         if (editor?.canvas?._objects?.filter(object => object.selectable).length == 0) {
             const rectangle = new fabric.Rect({
                 width: 100,
@@ -285,12 +293,15 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     :
                     <>
                         {/* no mode */}
-                        <ImageNextUI
+                        {/* <ImageNextUI
                             src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${date}`}
                             width={props.image.size[0].box.width}
                             height={props.image.size[0].box.height}
                             alt='image'
-                        />
+                        /> */}
+                        <div style={{ display: "grid", justifyContent: "center" }}>
+                            <FabricJSCanvas className="sample-canvas" onReady={onReady} />
+                        </div>
                     </>
             }
             <Button.Group color="warning">
