@@ -35,7 +35,7 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     environment: production # production secret env variables
-    if: github.base_ref_branch == 'production'
+    if: github.ref == 'refs/heads/production'
 
     steps:
       - name: Checkout
