@@ -40,7 +40,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         if (editor?.canvas.getContext()) {
             editor?.canvas.setWidth(props.image.size[0].box.width)
             editor?.canvas.setHeight(props.image.size[0].box.height)
-            const url = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}.${props.image.extension}?${new Date().toISOString()}`  // add date at the end to avoid static image in browser cache
+            const url = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${new Date().toISOString()}`  // add date at the end to avoid static image in browser cache
             fabric.Image.fromURL(url, function (img) {
                 // add background image
                 editor?.canvas.setBackgroundImage(img, editor?.canvas.renderAll.bind(editor?.canvas), {
@@ -254,7 +254,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 <>
                     {/* cropping mode */}
                     <Cropper
-                        src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}.${props.image.extension}?${date}`}
+                        src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${date}`}
                         style={{ marginLeft: "auto", marginRight: "auto", height: props.image.size[0].box.height, width: props.image.size[0].box.width }}
                         aspectRatio={1}
                         autoCropArea={1}
@@ -286,7 +286,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     <>
                         {/* no mode */}
                         <ImageNextUI
-                            src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}.${props.image.extension}?${date}`}
+                            src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${date}`}
                             width={props.image.size[0].box.width}
                             height={props.image.size[0].box.height}
                             alt='image'
