@@ -10,6 +10,7 @@ interface Dress {
     long: string,
     denim: string,
     pull: string,
+    cut: string,
 }
 const dress: Dress = {
     summer: 'summer',
@@ -21,6 +22,7 @@ const dress: Dress = {
     long: 'long',
     denim: 'denim',
     pull: 'pull',
+    cut: 'cut',
 }
 
 interface Top {

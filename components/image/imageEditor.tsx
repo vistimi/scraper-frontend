@@ -36,7 +36,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         [props.image, props.api])
 
     useEffect(() => {
-        loadRectangles()
+        loadRectangles();
     },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [editor])
@@ -176,7 +176,6 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 height: Math.round(height),
             },
         }
-        setDraw(true);
         return bodyImageCrop
     };
 
@@ -187,6 +186,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         const body = onCrop();
         props.api.putImageCrop(body);  // update current image
         props.updateParent();
+        setDraw(true);
     }
 
     /**
@@ -328,7 +328,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             }
             <Button.Group color="warning">
                 <Button auto onPress={() => { setDraw(false); setCrop(true) }} css={{ color: "black" }}>START CROPING</Button>
-                <Button auto onPress={() => { setDraw(true); setCrop(false) }} css={{ color: "black" }}>START DRAWING</Button>
+                <Button auto onPress={() => { setDraw(true); setCrop(false); loadRectangles(); }} css={{ color: "black" }}>START DRAWING</Button>
                 <Button auto onPress={() => { setDraw(false); setCrop(false) }} css={{ color: "black" }}>DEFAULT</Button>
             </Button.Group>
         </>
