@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import Cropper from "react-cropper";
 import "cropperjs/dist/cropper.css";
-import { Button, Input } from "@nextui-org/react";
+import { Button, Dropdown, Input } from "@nextui-org/react";
 import { Api } from "@services/api";
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { ImageCopySchema, ImageCropSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema";
 import { FabricJSCanvas, useFabricJSEditor } from "fabricjs-react";
 import { fabric } from 'fabric';
+import { Garment } from "@apiTypes/garnment";
+import Tags from "@pages/tags";
 
 interface ImageEditorProps {
     api: Api,
@@ -22,6 +24,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const [tagName, setTagName] = useState<string>("");
     const { selectedObjects, editor, onReady } = useFabricJSEditor();
     const date = new Date().toISOString();
+    const garment = Garment;
 
     useEffect(() => {
         // default and drawing mode
@@ -45,14 +48,14 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             editor?.canvas.setHeight(props.image.size[0].box.height)
             const url = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${new Date().toISOString()}`  // add date at the end to avoid static image in browser cache
             // editor?.canvas?.remove(...editor?.canvas?._objects)
-            fabric.Image.fromURL(url, 
+            fabric.Image.fromURL(url,
                 function (img) {
-                // add background image
-                editor?.canvas.setBackgroundImage(img, editor?.canvas.renderAll.bind(editor?.canvas), {crossOrigin: "*", });
-                // img.selectable = false
-                // editor?.canvas.add(img); 
-                // editor?.canvas.centerObject(img); 
-            }
+                    // add background image
+                    editor?.canvas.setBackgroundImage(img, editor?.canvas.renderAll.bind(editor?.canvas), { crossOrigin: "*", });
+                    // img.selectable = false
+                    // editor?.canvas.add(img); 
+                    // editor?.canvas.centerObject(img); 
+                }
             );
 
 
@@ -203,7 +206,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         props.api.copyImage(body);  // create a new image
     }
 
-    const onBox = async () => {
+    const onBox = async (tagName: string) => {
         if (editor?.canvas?._objects?.filter(object => object.selectable).length !== 1) {
             alert('There is no bounding box!'); return;
         }
@@ -256,21 +259,13 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         editor?.canvas?.forEachObject((object) => { object.selectable = false });
     }
 
-    const pressEnter = async (e) => {
-        if (e.key === 'Enter') {
-            await onBox();
-            setTagName("");
-            e.target.value = "";
-        }
-    }
-
-    const changeName = async (e) => {
-        setTagName(e.target.value)
+    const selectGarment = async (tagName: string) => {
+        await onBox(tagName);
     }
 
     return (
         <>
-            {crop && props.modeSelactable?
+            {crop && props.modeSelactable ?
                 <>
                     {/* cropping mode */}
                     <Cropper
@@ -294,24 +289,38 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                         <FabricJSCanvas className="sample-canvas" onReady={onReady} />
                         <button onClick={onAddRectangle}>Add Rectangle</button>
                         <br />
-                        <Input
-                            placeholder="Tag Name"
-                            css={{ display: "grid", justifyContent: "center" }}
-                            onChange={changeName}
-                            onKeyDown={pressEnter}
-                            aria-label="TagName"
-                        />
+                        <Dropdown>
+                            <Dropdown.Button flat color="secondary">
+                                Garment
+                            </Dropdown.Button>
+                            <Dropdown.Menu
+                                color="secondary"
+                                aria-label="Actions"
+                                css={{ $$dropdownMenuWidth: "280px" }}
+                            >
+                                {Object.entries(garment).map((value, index, _) => {
+                                    const k = value[0];
+                                    const v = value[1];
+                                    return <Dropdown.Section title={value[0]} key={k}>
+                                        {
+                                            Object.entries(v).map((value, index, _) => {
+                                                const k = value[0];
+                                                const v = value[1];
+                                                return <Dropdown.Item key={k}>
+                                                    <button onClick={() => { selectGarment(v as string) }}>{v}</button>
+                                                </Dropdown.Item>
+                                            })
+                                        }
+                                    </Dropdown.Section>
+                                })}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                        <br />
                         <br />
                     </div>
                     :
                     <>
                         {/* no mode */}
-                        {/* <ImageNextUI
-                            src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${date}`}
-                            width={props.image.size[0].box.width}
-                            height={props.image.size[0].box.height}
-                            alt='image'
-                        /> */}
                         <div style={{ display: "grid", justifyContent: "center" }}>
                             <FabricJSCanvas className="sample-canvas" onReady={onReady} />
                         </div>
