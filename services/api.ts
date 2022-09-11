@@ -1,5 +1,5 @@
 import { ImageSchema, TagSchema, UserSchema } from "@apiTypes/responseSchema";
-import { PostTagSchema, PostUserSchema, PostImageUnwantedSchema, PutImageTagsPushSchema, PutImageTagsPullSchema, ImageCropSchema, PostImageTransfer } from "@apiTypes/requestSchema";
+import { PostTagSchema, PostUserSchema, PostImageUnwantedSchema, PutImageTagsPushSchema, PutImageTagsPullSchema, ImageCropSchema, PostImageTransfer, ImageCopySchema } from "@apiTypes/requestSchema";
 
 export class Api {
     public static host = process.env.NEXT_PUBLIC_API_URL;
@@ -68,9 +68,9 @@ export class Api {
     /**
      * getImageFile fetch the image file
      */
-    public getImageFile = async (origin: string, originID: string, extension: string): Promise<any> => {
+    public getImageFile = async (origin: string, originID: string, extension: string): Promise<{dataType: string, dataFile: string[]}> => {
         try {
-            const res = await this.get(`/image/file/${origin}/${originID}.${extension}`);
+            const res = await this.get(`/image/file/${origin}/${originID}/${extension}`);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {
@@ -133,6 +133,17 @@ export class Api {
         try {
             const str = JSON.stringify(body);
             const res = await this.post(`/image/crop`, str);
+            await this.checkBadStatus(res);
+            return await res.json();
+        } catch (err) {
+            throw err;
+        }
+    };
+
+      public copyImage = async (body: ImageCopySchema): Promise<any> => {
+        try {
+            const str = JSON.stringify(body);
+            const res = await this.post(`/image/copy`, str);
             await this.checkBadStatus(res);
             return await res.json();
         } catch (err) {

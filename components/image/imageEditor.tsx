@@ -4,8 +4,7 @@ import "cropperjs/dist/cropper.css";
 import { Button, Input } from "@nextui-org/react";
 import { Api } from "@services/api";
 import { ImageSchema } from '@apiTypes/responseSchema';
-import { ImageCropSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema";
-import { Image as ImageNextUI } from "@nextui-org/react"
+import { ImageCopySchema, ImageCropSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema";
 import { FabricJSCanvas, useFabricJSEditor } from "fabricjs-react";
 import { fabric } from 'fabric';
 
@@ -45,12 +44,17 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             editor?.canvas.setWidth(props.image.size[0].box.width)
             editor?.canvas.setHeight(props.image.size[0].box.height)
             const url = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${new Date().toISOString()}`  // add date at the end to avoid static image in browser cache
-            fabric.Image.fromURL(url, function (img) {
+            // editor?.canvas?.remove(...editor?.canvas?._objects)
+            fabric.Image.fromURL(url, 
+                function (img) {
                 // add background image
-                editor?.canvas.setBackgroundImage(img, editor?.canvas.renderAll.bind(editor?.canvas), {
-                    crossOrigin: "*",
-                });
-            });
+                editor?.canvas.setBackgroundImage(img, editor?.canvas.renderAll.bind(editor?.canvas), {crossOrigin: "*", });
+                // img.selectable = false
+                // editor?.canvas.add(img); 
+                // editor?.canvas.centerObject(img); 
+            }
+            );
+
 
             const tagsWithBoxes = props.image?.tags?.filter(tag => tag.origin.box && Object.keys(tag.origin.box).length !== 0 && Object.getPrototypeOf(tag.origin.box) === Object.prototype);
             tagsWithBoxes?.forEach(tag => {
@@ -97,7 +101,6 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
 
             // drawing mode only
             if (draw) {
-                console.log(crop)
                 const deleteImage = new Image();
                 var deleteIcon = "data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3E%3Csvg version='1.1' id='Ebene_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' width='595.275px' height='595.275px' viewBox='200 215 230 470' xml:space='preserve'%3E%3Ccircle style='fill:%23F44336;' cx='299.76' cy='439.067' r='218.516'/%3E%3Cg%3E%3Crect x='267.162' y='307.978' transform='matrix(0.7071 -0.7071 0.7071 0.7071 -222.6202 340.6915)' style='fill:white;' width='65.545' height='262.18'/%3E%3Crect x='266.988' y='308.153' transform='matrix(0.7071 0.7071 -0.7071 0.7071 398.3889 -83.3116)' style='fill:white;' width='65.544' height='262.179'/%3E%3C/g%3E%3C/svg%3E";
                 deleteImage.src = deleteIcon;
@@ -128,7 +131,6 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     }
 
     const onAddRectangle = () => {
-        console.log('ADD RECT')
         if (editor?.canvas?._objects?.filter(object => object.selectable).length == 0) {
             const rectangle = new fabric.Rect({
                 width: 100,
@@ -190,6 +192,15 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const cropNewImage = () => {
         const body = onCrop();
         props.api.postImageCrop(body);  // create a new image
+    }
+
+    const copyImage = () => {
+        const body: ImageCopySchema = {
+            origin: props.image.origin,
+            originID: props.image.originID,
+            extension: props.image.extension,
+        };
+        props.api.copyImage(body);  // create a new image
     }
 
     const onBox = async () => {
@@ -274,6 +285,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     />
                     <Button auto onPress={cropCurrentImage} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP CURRENT IMAGE</Button>
                     <Button auto onPress={cropNewImage} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP NEW IMAGE</Button>
+                    <Button auto onPress={copyImage} css={{ marginLeft: "auto", marginRight: "auto" }} color="success">COPY IMAGE</Button>
                 </>
                 :
                 draw && props.modeSelactable ?

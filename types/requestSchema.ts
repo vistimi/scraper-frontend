@@ -19,6 +19,12 @@ export interface ImageCropSchema {
     box: BoxSchema,
 }
 
+export interface ImageCopySchema {
+    origin: string,
+    originID: string,
+    extension: string,
+}
+
 export interface DeleteImageSchema {
     origin: string,
     id: string,
