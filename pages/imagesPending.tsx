@@ -4,7 +4,6 @@ import { Button, Pagination, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { PostImageTransfer, PostImageUnwantedSchema, PostTagSchema, PostUserSchema, PutImageTagsPullSchema } from '@apiTypes/requestSchema';
 import { ImageEditor } from '@components/image/imageEditor';
-import { ModalError } from '@components/global/modal';
 import { NavBar } from '@components/global/navBar';
 
 export default function ImagesPending() {
@@ -161,7 +160,7 @@ export default function ImagesPending() {
             {/* Image informations */}
             {image ?
                 <>
-                    <ImageEditor api={api} image={image} updateParent={async () => { await imageFromPage(page) }} key='imageEditor' />
+                    <ImageEditor api={api} image={image} updateParent={async () => { await imageFromPage(page) }} modeSelactable={true} key='imageEditor' />
                     <Button shadow color="success" auto onPress={postImageTransfer} css={{ color: "black" }}>WANTED IMAGE</Button>
                     <div>_id: {image._id}</div>
                     <div>originID: {image.originID}</div>

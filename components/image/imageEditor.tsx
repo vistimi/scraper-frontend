@@ -13,6 +13,7 @@ interface ImageEditorProps {
     api: Api,
     image: ImageSchema,
     updateParent: () => void,
+    modeSelactable: boolean,
 }
 
 export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
@@ -258,7 +259,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
 
     return (
         <>
-            {crop ?
+            {crop && props.modeSelactable?
                 <>
                     {/* cropping mode */}
                     <Cropper
@@ -275,7 +276,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     <Button auto onPress={cropNewImage} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP NEW IMAGE</Button>
                 </>
                 :
-                draw ?
+                draw && props.modeSelactable ?
                     <div style={{ display: "grid", justifyContent: "center" }}>
                         {/* drawing mode */}
                         <FabricJSCanvas className="sample-canvas" onReady={onReady} />

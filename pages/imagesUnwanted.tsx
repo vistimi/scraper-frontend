@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Api } from "@services/api";
 import { Button, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
-import { ModalError } from '@components/global/modal';
 import { NavBar } from '@components/global/navBar';
 
 export default function ImagesUnwanted() {
