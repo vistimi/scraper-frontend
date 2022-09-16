@@ -43,9 +43,23 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
 
     const loadRectangles = () => {
         // if canvas has a context
-        if (editor?.canvas.getContext()) {
-            editor?.canvas.setWidth(props.image.size[0].box.width)
-            editor?.canvas.setHeight(props.image.size[0].box.height)
+        if (editor?.canvas.getContext() && props.image) {
+            const max = 500;
+            let width = props.image.size[0].box.width;
+            let height = props.image.size[0].box.height;
+            if (height > max) {
+                width = width * max / height;
+                height = max;
+                editor?.canvas.setWidth(width);
+                editor?.canvas.setHeight(height);
+            }
+            if (width > max) {
+                height = height * max / width;
+                width = max;
+                editor?.canvas.setWidth(width);
+                editor?.canvas.setHeight(height);
+            }
+
             const url = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${new Date().toISOString()}`  // add date at the end to avoid static image in browser cache
             // editor?.canvas?.remove(...editor?.canvas?._objects)
             fabric.Image.fromURL(url,
@@ -59,7 +73,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             );
 
 
-            const tagsWithBoxes = props.image?.tags?.filter(tag => tag.origin.box && Object.keys(tag.origin.box).length !== 0 && Object.getPrototypeOf(tag.origin.box) === Object.prototype);
+            const tagsWithBoxes = props.image?.tags?.filter(tag => tag.name && tag.origin.box && Object.keys(tag.origin.box).length !== 0 && Object.getPrototypeOf(tag.origin.box) === Object.prototype);
             tagsWithBoxes?.forEach(tag => {
                 const color = 'green';
                 const rectangle = new fabric.Rect({
@@ -147,7 +161,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             // remove the rotation point
             rectangle.controls = {
                 ...fabric.Rect.prototype.controls,
-                mtr: new fabric.Control({ visible: false })
+                mtr: new fabric.Control({ visible: false})
             }
             editor?.canvas.add(rectangle);
             editor?.canvas.centerObject(rectangle);
@@ -254,13 +268,51 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             }],
         }
         await props.api.putImageTagsPush(body);
-        alert('tag added')
+        alert(`tag '${tagName}' added`);
         props.updateParent();
         editor?.canvas?.forEachObject((object) => { object.selectable = false });
     }
 
     const selectGarment = async (tagName: string) => {
         await onBox(tagName);
+    }
+
+    const WrapperLoopGarment = (garmentObject: object, title: string, closeOnSelect: boolean) => {
+        return <Dropdown closeOnSelect={closeOnSelect}>
+            <Dropdown.Button flat color="secondary">
+                {title}
+            </Dropdown.Button>
+            <Dropdown.Menu
+                color="secondary"
+                aria-label="Actions"
+                css={{ $$dropdownMenuWidth: "280px" }}
+            >
+                {loopGarment(garmentObject, 0)}
+            </Dropdown.Menu>
+        </Dropdown>
+    }
+
+    const loopGarment = (garmentObject: object, loop: number) => {
+        return Object.entries(garmentObject).map((parentValue, index, _) => {
+            const childKey = parentValue[0];
+            const childValue = parentValue[1];
+            if (typeof childValue === 'string') {
+                return <Dropdown.Item key={`string${index}`}>
+                    <button
+                        onClick={() => { selectGarment(childValue) }}
+                        style={{ width: '100%', height: '100%', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                    >
+                        {childValue}
+                    </button>
+                </Dropdown.Item>
+            } else {
+                if (loop === 0) {
+                    return < Dropdown.Section title={childKey} key={`object${index}`}>{loopGarment(childValue, loop + 1)}</Dropdown.Section>
+                } else {
+                    return <Dropdown.Item key={`string${index}`}>{WrapperLoopGarment(childValue, childKey, true)}</Dropdown.Item>
+                }
+            }
+        })
     }
 
     return (
@@ -287,35 +339,8 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     <div style={{ display: "grid", justifyContent: "center" }}>
                         {/* drawing mode */}
                         <FabricJSCanvas className="sample-canvas" onReady={onReady} />
-                        <button onClick={onAddRectangle}>Add Rectangle</button>
                         <br />
-                        <Dropdown>
-                            <Dropdown.Button flat color="secondary">
-                                Garment
-                            </Dropdown.Button>
-                            <Dropdown.Menu
-                                color="secondary"
-                                aria-label="Actions"
-                                css={{ $$dropdownMenuWidth: "280px" }}
-                            >
-                                {Object.entries(garment).map((value, index, _) => {
-                                    const k = value[0];
-                                    const v = value[1];
-                                    return <Dropdown.Section title={value[0]} key={k}>
-                                        {
-                                            Object.entries(v).map((value, index, _) => {
-                                                const k = value[0];
-                                                const v = value[1];
-                                                return <Dropdown.Item key={k}>
-                                                    <button onClick={() => { selectGarment(v as string) }}>{v}</button>
-                                                </Dropdown.Item>
-                                            })
-                                        }
-                                    </Dropdown.Section>
-                                })}
-                            </Dropdown.Menu>
-                        </Dropdown>
-                        <br />
+                        {WrapperLoopGarment(garment, 'Garment', false)}
                         <br />
                     </div>
                     :

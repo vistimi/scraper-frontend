@@ -1,4 +1,5 @@
 // https://fr.zalando.ch/mode-femme/
+// https://fr.zalando.ch/mode-homme/
 
 interface Dress {
     summer: string,
@@ -75,8 +76,8 @@ interface Pant {
     leather: string,
     cargo: string,
     jogging: string,
-    // jean: PantJean,
-    jean: string,
+    jean: PantJean,
+    // jean: string,
 }
 const pant: Pant = {
     chino: 'chino',
@@ -85,8 +86,8 @@ const pant: Pant = {
     leather: 'leather',
     cargo: 'cargo',
     jogging: 'jogging',
-    // jean: pantJean,
-    jean: 'jean',
+    jean: pantJean,
+    // jean: 'jean',
 }
 
 interface Sweat {
