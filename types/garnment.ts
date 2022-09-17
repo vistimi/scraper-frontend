@@ -87,13 +87,12 @@ const pant: Pant = {
     cargo: 'cargo',
     jogging: 'jogging',
     jean: pantJean,
-    // jean: 'jean',
 }
 
 interface Sweat {
     sweatshirt: string,
     hoodie: string,
-    zipper: string,
+    // zipper: string,
     fleece: string,
     vest: string,
     pull: string,
@@ -101,7 +100,7 @@ interface Sweat {
 const sweat: Sweat = {
     sweatshirt: 'sweatshirt',
     hoodie: 'hoodie',
-    zipper: 'zipper',
+    // zipper: 'zipper',
     fleece: 'fleece',
     vest: 'vest',
     pull: 'pull',
