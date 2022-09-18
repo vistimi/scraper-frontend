@@ -12,7 +12,7 @@ GET_ELBs=$(
     aws elbv2 describe-load-balancers \
         --names ${applicationLoadBalancer} \
         --region ${region} \
-        --query 'LoadBalancers[*].[LoadBalancerArn]' \
+        --query 'LoadBalancers[0].[LoadBalancerArn]' \
         --output text
 )
 loadBalancerArn=${GET_ELBs}
@@ -30,7 +30,9 @@ UPDATE_FARGATE=$(
         --service ${ecsServiceName} \
         --desired-count 0 \
         --force-new-deployment \
-        --region ${region} 
+        --region ${region} \
+        --query 'service.[desiredCount]' \
+        --output text
 )
 echo "desiredCount = ${UPDATE_FARGATE}"
 
@@ -40,7 +42,7 @@ GET_TASKs=$(
         --cluster ${ecsClusterName} \
         --region ${region} \
         --service-name ${ecsServiceName} \
-        --query 'taskArns[*]' \
+        --query 'taskArns[0]' \
         --output text
 )
 taskArn=${GET_TASKs}
@@ -52,7 +54,7 @@ STOP_TASKs=$(
         --cluster ${ecsClusterName} \
         --region ${region} \
         --task ${taskArn} \
-        --query 'task[*].desiredStatus' \
+        --query 'task.[desiredStatus]' \
         --output text
 )
 echo "desiredStatus = ${STOP_TASKs}"
