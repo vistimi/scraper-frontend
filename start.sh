@@ -22,9 +22,9 @@ echo "backendDNS = ${backendDNS}"
 # write to production file
 echo 'NEXT_PUBLIC_API_URL='${backendDNS} > .env.production
 
-#push production file
+#push production file (aws only support .env extension)
 bucketName=s3-dataset-gui-production-secrets
-PUSH_ENV_S3=$(aws s3 cp .env.production s3://${bucketName}/.env.production)
+PUSH_ENV_S3=$(aws s3 cp .env.production s3://${bucketName}/.env)
 echo ${PUSH_ENV_S3}
 
 # get security group
