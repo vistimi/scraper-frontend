@@ -79,7 +79,9 @@ UPDATE_FARGATE=$(
         --service ${ecsServiceName} \
         --desired-count 1 \
         --force-new-deployment \
-        --region ${region} 
+        --region ${region} \
+        --query 'service[*].[desiredCount]' \
+        --output text
 )
 echo "desiredCount = ${UPDATE_FARGATE}"
 

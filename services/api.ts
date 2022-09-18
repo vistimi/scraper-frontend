@@ -68,7 +68,7 @@ export class Api {
     /**
      * getImageFile fetch the image file
      */
-    public getImageFile = async (origin: string, originID: string, extension: string): Promise<{dataType: string, dataFile: string[]}> => {
+    public getImageFile = async (origin: string, originID: string, extension: string): Promise<{ dataType: string, dataFile: string[] }> => {
         try {
             const res = await this.get(`/image/file/${origin}/${originID}/${extension}`);
             await this.checkBadStatus(res);
@@ -140,7 +140,7 @@ export class Api {
         }
     };
 
-      public copyImage = async (body: ImageCopySchema): Promise<any> => {
+    public copyImage = async (body: ImageCopySchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
             const res = await this.post(`/image/copy`, str);

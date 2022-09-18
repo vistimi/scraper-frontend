@@ -39,7 +39,7 @@ packages:
 
 ## Docker
 
-    sudo docker build --build-arg NEXT_PUBLIC_API_URL=http://localhost:8080 -t dataset-gui-img .
+    sudo docker build -t dataset-gui-img .
     sudo docker run -it -p 3000:3000 --rm --name dataset-gui-run dataset-gui-img
 ## .env
 
