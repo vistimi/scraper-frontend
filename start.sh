@@ -11,37 +11,15 @@ securityGroup=dataset-gui-sg
 backendELB=scraper-alb 
 GET_BACKEND_DNSs=$(
     aws elbv2 describe-load-balancers \
-    --names ${backendELB} \
-    --region ${region} \
-    --query 'LoadBalancers[0].[DNSName]' \
-    --output text
+        --names ${backendELB} \
+        --region ${region} \
+        --query 'LoadBalancers[0].[DNSName]' \
+        --output text
 )
 backendDNS=${GET_BACKEND_DNSs}
 echo "backendDNS = ${backendDNS}"
 
 # write to production file
-echo 'NEXT_PUBLIC_API_URL='${backendDNS} > .env.production#!/bin/bash
-ecsClusterName=scraperClusterECS
-ecsServiceName=datasetGUIServiceFargate
-nameTaskDefinition=datasetGUIDefinitionFargate
-region=us-east-1
-applicationLoadBalancer=dataset-gui-alb
-targetGroup=dataset-gui-tg
-securityGroup=dataset-gui-sg
-
-# get DNS of backend
-backendELB=scraper-alb 
-GET_BACKEND_DNSs=$(
-    aws elbv2 describe-load-balancers \
-    --names ${backendELB} \
-    --region ${region} \
-    --query 'LoadBalancers[0].[DNSName]' \
-    --output text
-)
-backendDNS=${GET_BACKEND_DNSs}
-echo "backendDNS = ${backendDNS}"
-
-#write to production file
 echo 'NEXT_PUBLIC_API_URL='${backendDNS} > .env.production
 
 #push production file
