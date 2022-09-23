@@ -2,8 +2,10 @@ import { ImageSchema, TagSchema, UserSchema } from "@apiTypes/responseSchema";
 import { PostTagSchema, PostUserSchema, PostImageUnwantedSchema, PutImageTagsPushSchema, PutImageTagsPullSchema, ImageCropSchema, PostImageTransfer, ImageCopySchema } from "@apiTypes/requestSchema";
 
 export class Api {
+
     public static host = process.env.NEXT_PUBLIC_API_URL;
     public authorization: string = null;
+
 
     constructor() {
         if (!Api.host) console.error(`NEXT_PUBLIC_API_URL in env not defined`);
