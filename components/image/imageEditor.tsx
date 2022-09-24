@@ -39,7 +39,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             width = max;
         }
         setSize({ width: width, height: height })
-        
+
         // default and drawing mode
         if (!crop) {
             editor?.canvas?.remove(...editor?.canvas?._objects)
@@ -56,9 +56,9 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
 
     const loadRectangles = () => {
         // if canvas has a context
-        editor?.canvas.setWidth(size.width);
-        editor?.canvas.setHeight(size.height);
         if (editor?.canvas.getContext() && props.image) {
+            editor?.canvas.setWidth(size.width);
+            editor?.canvas.setHeight(size.height);
             const url = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${new Date().toISOString()}`  // add date at the end to avoid static image in browser cache
             // editor?.canvas?.remove(...editor?.canvas?._objects)
             fabric.Image.fromURL(url,
