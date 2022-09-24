@@ -20,7 +20,6 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const cropperRef = useRef<HTMLImageElement>(null);
     const [crop, setCrop] = useState<boolean>(false);
     const [draw, setDraw] = useState<boolean>(false);
-    const [tagName, setTagName] = useState<string>("");
     const { selectedObjects, editor, onReady } = useFabricJSEditor();
     const date = new Date().toISOString();
     const garment = Garment;
@@ -59,8 +58,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         if (editor?.canvas.getContext() && props.image) {
             editor?.canvas.setWidth(size.width);
             editor?.canvas.setHeight(size.height);
-            const url = `${props.api.hostName()}/image/file/${props.image.name}?${new Date().toISOString()}`  // add date at the end to avoid static image in browser cache
-            // editor?.canvas?.remove(...editor?.canvas?._objects)
+            const url = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}/${props.image.extension}?${new Date().toISOString()}`  // add date at the end to avoid static image in browser cache
             fabric.Image.fromURL(url,
                 function (img) {
                     // add background image
@@ -321,7 +319,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 <>
                     {/* cropping mode */}
                     <Cropper
-                        src={`${props.api.hostName()}/image/file/${props.image.name}?${date}`}
+                        src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}/${props.image.extension}?${date}`}
                         style={{ marginLeft: "auto", marginRight: "auto", height: size.height, width: size.width }}
                         aspectRatio={1}
                         autoCropArea={1}
