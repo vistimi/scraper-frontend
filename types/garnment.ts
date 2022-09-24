@@ -1,6 +1,8 @@
 // https://fr.zalando.ch/mode-femme/
 // https://fr.zalando.ch/mode-homme/
 
+import { sharedFocus } from "@nextui-org/react"
+
 interface Dress {
     summer: string,
     night: string,
@@ -60,13 +62,13 @@ interface PantJean {
     short: string,
 }
 const pantJean: PantJean = {
-    skinny: 'skinny',
-    slim: 'slim',
-    right: 'right',
-    large: 'large',
-    bootcut: 'bootcut',
-    mom: 'mom',
-    short: 'short',
+    skinny: 'jeanSkinny',
+    slim: 'jeanSlim',
+    right: 'jeanRight',
+    large: 'jeanLarge',
+    bootcut: 'jeanBootcut',
+    mom: 'jeanMom',
+    short: 'jeanShort',
 }
 
 interface Pant {
@@ -77,7 +79,6 @@ interface Pant {
     cargo: string,
     jogging: string,
     jean: PantJean,
-    // jean: string,
 }
 const pant: Pant = {
     chino: 'chino',
@@ -205,29 +206,74 @@ const jumpsuit: Jumpsuit = {
 interface Lingerie {
     bra: string,
     culotte: string,
-    sets: string,
+    suspender: string,
     camisole: string,
     sculptant: string,
 }
 const lingerie: Lingerie = {
     bra: 'bra',
     culotte: 'culotte',
-    sets: 'sets',
+    suspender: 'suspender',
     camisole: 'camisole',
     sculptant: 'sculptant',
 }
 
 interface Sock {
-    thight: string,
-    stocking: string,
     sock: string,
     highSock: string,
+    stocking: string,
+    thight: string,
 }
 const sock: Sock = {
-    thight: 'thight',
-    stocking: 'stocking',
     sock: 'sock',
     highSock: 'high sock',
+    stocking: 'stocking',
+    thight: 'thight',
+}
+
+interface Shoe {
+    basket: string,
+    sneaker: string,
+    lowCut: string,
+    ballerina: string,
+    bootAnkle: string,
+    bootHigh: string,
+    pump: string,
+    heel:string,
+    flipflop: string,
+    slipper: string,
+    sandal: string,
+
+}
+const shoe: Shoe = {
+    basket: 'basket',
+    sneaker: 'sneaker',
+    lowCut: 'lowCut', 
+    ballerina: 'ballerina',
+    bootAnkle: 'bootAnkle',
+    bootHigh: 'bootHigh',
+    pump: 'pump',
+    heel: 'heel',
+    flipflop: 'flipflop',
+    slipper: 'slipper',
+    sandal: 'sandal',
+}
+
+interface Hat {
+    hat: string,
+    cap: string,
+    beret: string,
+    beanie: string,
+    trapper: string,
+    vizor: string,
+}
+const hat: Hat = {
+    hat: 'hat',
+    cap: 'cap',
+    beret: 'beret',
+    beanie: 'beanie',
+    trapper: 'trapper',
+    vizor: 'vizor',
 }
 
 interface Garment {
@@ -243,6 +289,8 @@ interface Garment {
     jumpsuit: Jumpsuit,
     lingerie: Lingerie,
     sock: Sock,
+    shoe: Shoe,
+    hat: Hat,
 }
 export const Garment: Garment = {
     dress: dress,
@@ -257,4 +305,6 @@ export const Garment: Garment = {
     jumpsuit: jumpsuit,
     lingerie: lingerie,
     sock: sock,
+    shoe: shoe,
+    hat: hat,
 }
