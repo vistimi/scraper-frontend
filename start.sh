@@ -19,6 +19,36 @@ GET_BACKEND_DNSs=$(
 backendDNS=${GET_BACKEND_DNSs}
 echo "backendDNS = ${backendDNS}"
 
+# update the github secret env variable
+gh secret set NEXT_PUBLIC_API_URL --env production -b "${backendDNS}" -r KookaS/dataset-gui
+
+# redo the CI/CD
+gh workflow run CICD.yml -r production -f dns="${backendDNS}" -R KookaS/dataset-gui
+
+echo "Sleep 10 seconds for spawning action"
+sleep 10s
+echo "Continue to check the status"
+
+# while workflow status == in_progress, wait
+workflowStatus=$(gh run list --workflow CI/CD --limit 1 | awk '{print $1}')
+while [ "${workflowStatus}" != "completed" ]
+do
+    echo "Waiting for status workflow to complete: "${workflowStatus}
+    sleep 5s
+    workflowStatus=$(gh run list --workflow CI/CD --limit 1 | awk '{print $1}')
+done
+
+echo "Workflow finished: "${workflowStatus}
+
+# result of the last completed workflow
+workflowResult=$(gh run list --workflow CI/CD | grep -oh "completed.*" | head -1 | awk '{print $2}')
+echo 'workflowResult = '${workflowResult}
+
+# needs to be successful, otherwise exit
+if [ "${workflowResult}" != "success" ]; then
+  exit 1
+fi
+
 # write to production file
 echo 'NEXT_PUBLIC_API_URL='${backendDNS} > .env.production
 
@@ -36,7 +66,7 @@ GET_SGs=$(
         --output text
     )
 securityGroupID=${GET_SGs}
-echo "securityGroupID = ${securityGroupID}"
+echo "securityGroupID = "${securityGroupID}
 
 # create elb
 CREATE_ELB_GET_ARNs=$(
@@ -53,7 +83,17 @@ CREATE_ELB_GET_ARNs=$(
         --output text
     )
 loadBalancerArn=${CREATE_ELB_GET_ARNs}
-echo "loadBalancerArn = ${loadBalancerArn}"
+echo "loadBalancerArn = "${loadBalancerArn}
+
+GET_FRONTEND_DNSs=$(
+    aws elbv2 describe-load-balancers \
+        --names ${applicationLoadBalancer} \
+        --region ${region} \
+        --query 'LoadBalancers[0].[DNSName]' \
+        --output text
+)
+frontendDNS=${GET_BACKEND_DNSs}
+echo "frontendDNS = ${frontendDNS}"
 
 # get target group of elb
 GET_TGs=$(
@@ -64,7 +104,7 @@ GET_TGs=$(
         --output text
 )
 targetGroupArn=${GET_TGs}
-echo "targetGroupArn = ${targetGroupArn}"
+echo "targetGroupArn = "${targetGroupArn}
 
 # add listener to elb
 CREATE_LISTENER=$(
@@ -77,7 +117,7 @@ CREATE_LISTENER=$(
         --query 'Listeners[0].[ListenerArn]' \
         --output text
 )
-echo "listenerArn = ${CREATE_LISTENER}"
+echo "listenerArn = "${CREATE_LISTENER}
 
 # desired tasks
 UPDATE_FARGATE=$(
@@ -90,11 +130,4 @@ UPDATE_FARGATE=$(
         --query 'service.[desiredCount]' \
         --output text
 )
-echo "desiredCount = ${UPDATE_FARGATE}"
-
-# # for more than one variable
-# IFS=', ' read -r -a array <<< "$ELB_ARN" 
-# for arn in "${array[@]}" 
-# do
-#     echo ${arn} 
-# done
+echo "desiredCount = "${UPDATE_FARGATE}
