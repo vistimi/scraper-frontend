@@ -16,7 +16,7 @@ GET_ELBs=$(
         --output text
 )
 loadBalancerArn=${GET_ELBs}
-echo "loadBalancerArn = ${loadBalancerArn}"
+echo "loadBalancerArn = "${loadBalancerArn}
 
 # delete load balancer
 aws elbv2 delete-load-balancer \
@@ -34,7 +34,7 @@ UPDATE_FARGATE=$(
         --query 'service.[desiredCount]' \
         --output text
 )
-echo "desiredCount = ${UPDATE_FARGATE}"
+echo "desiredCount = "${UPDATE_FARGATE}
 
 # remove the active tasks
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )

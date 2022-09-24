@@ -8,7 +8,6 @@ import { ImageCopySchema, ImageCropSchema, PutImageTagsPushSchema } from "@apiTy
 import { FabricJSCanvas, useFabricJSEditor } from "fabricjs-react";
 import { fabric } from 'fabric';
 import { Garment } from "@apiTypes/garnment";
-import Tags from "@pages/tags";
 
 interface ImageEditorProps {
     api: Api,
@@ -25,8 +24,22 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const { selectedObjects, editor, onReady } = useFabricJSEditor();
     const date = new Date().toISOString();
     const garment = Garment;
+    const [size, setSize] = useState<{ width: number, height: number }>({ width: 0, height: 0 })
 
     useEffect(() => {
+        const max = 500;
+        let width = props.image.size[0].box.width;
+        let height = props.image.size[0].box.height;
+        if (height > max) {
+            width = width * max / height;
+            height = max;
+        }
+        if (width > max) {
+            height = height * max / width;
+            width = max;
+        }
+        setSize({ width: width, height: height })
+        
         // default and drawing mode
         if (!crop) {
             editor?.canvas?.remove(...editor?.canvas?._objects)
@@ -43,35 +56,22 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
 
     const loadRectangles = () => {
         // if canvas has a context
+        editor?.canvas.setWidth(size.width);
+        editor?.canvas.setHeight(size.height);
         if (editor?.canvas.getContext() && props.image) {
-            const max = 500;
-            let width = props.image.size[0].box.width;
-            let height = props.image.size[0].box.height;
-            if (height > max) {
-                width = width * max / height;
-                height = max;
-                editor?.canvas.setWidth(width);
-                editor?.canvas.setHeight(height);
-            }
-            if (width > max) {
-                height = height * max / width;
-                width = max;
-                editor?.canvas.setWidth(width);
-                editor?.canvas.setHeight(height);
-            }
-
             const url = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${new Date().toISOString()}`  // add date at the end to avoid static image in browser cache
             // editor?.canvas?.remove(...editor?.canvas?._objects)
             fabric.Image.fromURL(url,
                 function (img) {
                     // add background image
-                    editor?.canvas.setBackgroundImage(img, editor?.canvas.renderAll.bind(editor?.canvas), { crossOrigin: "*", });
-                    // img.selectable = false
-                    // editor?.canvas.add(img); 
-                    // editor?.canvas.centerObject(img); 
+                    const options = {
+                        crossOrigin: "*",
+                        scaleX: editor?.canvas.width / img.width,
+                        scaleY: editor?.canvas.height / img.height,
+                    }
+                    editor?.canvas.setBackgroundImage(img, editor?.canvas.renderAll.bind(editor?.canvas), options);
                 }
             );
-
 
             const tagsWithBoxes = props.image?.tags?.filter(tag => tag.name && tag.origin.box && Object.keys(tag.origin.box).length !== 0 && Object.getPrototypeOf(tag.origin.box) === Object.prototype);
             tagsWithBoxes?.forEach(tag => {
@@ -161,7 +161,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             // remove the rotation point
             rectangle.controls = {
                 ...fabric.Rect.prototype.controls,
-                mtr: new fabric.Control({ visible: false})
+                mtr: new fabric.Control({ visible: false })
             }
             editor?.canvas.add(rectangle);
             editor?.canvas.centerObject(rectangle);
@@ -322,7 +322,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     {/* cropping mode */}
                     <Cropper
                         src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${date}`}
-                        style={{ marginLeft: "auto", marginRight: "auto", height: props.image.size[0].box.height, width: props.image.size[0].box.width }}
+                        style={{ marginLeft: "auto", marginRight: "auto", height: size.height, width: size.width }}
                         aspectRatio={1}
                         autoCropArea={1}
                         viewMode={1}

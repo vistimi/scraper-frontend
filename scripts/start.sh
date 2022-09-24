@@ -14,13 +14,13 @@ GET_BACKEND_DNSs=$(
         --output text
 )
 backendDNS=${GET_BACKEND_DNSs}
-echo "backendDNS = ${backendDNS}"
+echo "backendDNS = http://"${backendDNS}
 
 # update the github secret env variable
-gh secret set NEXT_PUBLIC_API_URL --env production -b "${backendDNS}" -r KookaS/dataset-gui
+gh secret set NEXT_PUBLIC_API_URL --env production -b "http://${backendDNS}" -r KookaS/dataset-gui
 
 # redo the CI/CD
-gh workflow run CICD.yml -r production -f dns="${backendDNS}" -R KookaS/dataset-gui
+gh workflow run CICD.yml -r production -f dns="http://${backendDNS}" -R KookaS/dataset-gui
 
 echo "Sleep 10 seconds for spawning action"
 sleep 10s
@@ -82,15 +82,16 @@ CREATE_ELB_GET_ARNs=$(
 loadBalancerArn=${CREATE_ELB_GET_ARNs}
 echo "loadBalancerArn = "${loadBalancerArn}
 
-GET_FRONTEND_DNSs=$(
+# get the DNS for browsing
+GET_ELB_DNSs=$(
     aws elbv2 describe-load-balancers \
         --names ${applicationLoadBalancer} \
         --region ${region} \
         --query 'LoadBalancers[0].[DNSName]' \
         --output text
 )
-frontendDNS=${GET_BACKEND_DNSs}
-echo "frontendDNS = ${frontendDNS}"
+elbDNS=${GET_ELB_DNSs}
+echo "elbDNS = http://${elbDNS}"
 
 # get target group of elb
 GET_TGs=$(
