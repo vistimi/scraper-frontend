@@ -59,7 +59,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         if (editor?.canvas.getContext() && props.image) {
             editor?.canvas.setWidth(size.width);
             editor?.canvas.setHeight(size.height);
-            const url = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${new Date().toISOString()}`  // add date at the end to avoid static image in browser cache
+            const url = `${props.api.hostName()}/image/file/${props.image.name}?${new Date().toISOString()}`  // add date at the end to avoid static image in browser cache
             // editor?.canvas?.remove(...editor?.canvas?._objects)
             fabric.Image.fromURL(url,
                 function (img) {
@@ -321,7 +321,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 <>
                     {/* cropping mode */}
                     <Cropper
-                        src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.originID}/${props.image.extension}?${date}`}
+                        src={`${props.api.hostName()}/image/file/${props.image.name}?${date}`}
                         style={{ marginLeft: "auto", marginRight: "auto", height: size.height, width: size.width }}
                         aspectRatio={1}
                         autoCropArea={1}
