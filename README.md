@@ -47,5 +47,7 @@ packages:
 
 ## AWS Bash scripts
 
-    sudo chmod +x <script-file>
-    ./<script-file>
+    find scripts/ -type f -exec chmod +x {} \;    
+
+    ./scripts/<script-file>
+

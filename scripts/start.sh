@@ -1,7 +1,4 @@
 #!/bin/bash
-ecsClusterName=scraperClusterECS
-ecsServiceName=datasetGUIServiceFargate
-nameTaskDefinition=datasetGUIDefinitionFargate
 region=us-east-1
 applicationLoadBalancer=dataset-gui-alb
 targetGroup=dataset-gui-tg
@@ -119,15 +116,6 @@ CREATE_LISTENER=$(
 )
 echo "listenerArn = "${CREATE_LISTENER}
 
-# desired tasks
-UPDATE_FARGATE=$(
-    aws ecs update-service \
-        --cluster ${ecsClusterName} \
-        --service ${ecsServiceName} \
-        --desired-count 1 \
-        --force-new-deployment \
-        --region ${region} \
-        --query 'service.[desiredCount]' \
-        --output text
-)
-echo "desiredCount = "${UPDATE_FARGATE}
+# update the service
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+${SCRIPT_DIR}/update_service.sh
