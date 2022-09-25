@@ -51,3 +51,5 @@ packages:
 
     ./scripts/<script-file>
 
+npm install --save-dev jest jest-environment-jsdom @types/jest ts-jest @testing-library/react @testing-library/jest-dom
+

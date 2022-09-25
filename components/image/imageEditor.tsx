@@ -1,11 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Cropper from "react-cropper";
 import "cropperjs/dist/cropper.css";
 import { Button, Dropdown, Input } from "@nextui-org/react";
 import { Api } from "@services/api";
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { ImageCopySchema, ImageCropSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema";
-import { FabricJSCanvas, useFabricJSEditor } from "fabricjs-react";
 import { fabric } from 'fabric';
 import { Garment } from "@apiTypes/garnment";
 
@@ -13,64 +12,100 @@ interface ImageEditorProps {
     api: Api,
     image: ImageSchema,
     updateParent: () => void,
-    modeSelactable: boolean,
+    modeSelactable: boolean, // images can be edited or not
 }
 
 export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const cropperRef = useRef<HTMLImageElement>(null);
-    const [crop, setCrop] = useState<boolean>(false);
-    const [draw, setDraw] = useState<boolean>(false);
-    const { selectedObjects, editor, onReady } = useFabricJSEditor();
-    const date = new Date().toISOString();
+    const [mode, setMode] = useState<string>('default');
     const garment = Garment;
-    const [size, setSize] = useState<{ width: number, height: number }>({ width: 0, height: 0 })
+    const [size, setSize] = useState<{ width: number, height: number }>({ width: 0, height: 0 });
 
-    useEffect(() => {
-        const max = 500;
-        let width = props.image.size[0].box.width;
-        let height = props.image.size[0].box.height;
-        if (height > max) {
-            width = width * max / height;
-            height = max;
-        }
-        if (width > max) {
-            height = height * max / width;
-            width = max;
-        }
-        setSize({ width: width, height: height })
+    const [canvas, setCanvas] = useState<fabric.Canvas>(null);
 
-        // default and drawing mode
-        if (!crop) {
-            editor?.canvas?.remove(...editor?.canvas?._objects)
-        }
-    },
+    // fires synchronously after all DOM mutations
+    useLayoutEffect(
+        () => {
+            const canvas = initCanvas();
+            setCanvas(canvas);
+            updateCanvas();
+            initFabricDeleteControl();
+
+            return () => {
+                canvas.dispose();
+            };
+        },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [props.image, props.api])
+        []
+    );
 
-    useEffect(() => {
-        loadRectangles();
-    },
+    // fires after the render is committed to the screen
+    useEffect(
+        () => {
+            const max = 500;
+            let width = props.image.size[0].box.width;
+            let height = props.image.size[0].box.height;
+            if (height > max) {
+                width = width * max / height;
+                height = max;
+            }
+            if (width > max) {
+                height = height * max / width;
+                width = max;
+            }
+            setSize({ width: width, height: height })
+
+            actionForModes(mode);
+        },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [editor])
+        [props.image]
+    )
 
-    const loadRectangles = () => {
-        // if canvas has a context
-        if (editor?.canvas.getContext() && props.image) {
-            editor?.canvas.setWidth(size.width);
-            editor?.canvas.setHeight(size.height);
-            const url = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}/${props.image.extension}?${new Date().toISOString()}`  // add date at the end to avoid static image in browser cache
-            fabric.Image.fromURL(url,
-                function (img) {
-                    // add background image
-                    const options = {
-                        crossOrigin: "*",
-                        scaleX: editor?.canvas.width / img.width,
-                        scaleY: editor?.canvas.height / img.height,
-                    }
-                    editor?.canvas.setBackgroundImage(img, editor?.canvas.renderAll.bind(editor?.canvas), options);
+    const updateCanvas = () => {
+        canvas?.setWidth(size.width);
+        canvas?.setHeight(size.height);
+        fabric.Image.fromURL(`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}/${props.image.extension}?${new Date().toISOString()}`,
+            function (img) {
+                const options = {
+                    crossOrigin: "*",
+                    scaleX: size.width / img.width,
+                    scaleY: size.height / img.height,
                 }
-            );
+                canvas?.setBackgroundImage(img, canvas?.renderAll.bind(canvas), options);
+            }
+        );
+    }
 
+    const initCanvas = (): fabric.Canvas => {
+        return new fabric.Canvas('canvas', {
+            height: 500,
+            width: 500,
+            backgroundColor: 'pink',
+            uniformScaling: false,
+        })
+    };
+
+    const changeMode = (mode: string) => {
+        actionForModes(mode);
+        setMode(mode);
+    }
+
+    const actionForModes = (mode: string) => {
+        if (!['default', 'draw', 'crop'].includes(mode)) throw new Error(`Mode: ${mode} is not appropriate`);
+        switch (mode) {
+            case 'draw':
+                setCanvas(initCanvas());
+                tagsWithEditing();
+                updateCanvas();
+            case 'default':
+                setCanvas(initCanvas());
+                tagsNoEditing();
+                updateCanvas();
+        }
+    }
+
+    const loadTags = () => {
+        if (!!canvas && !!props.image) {
             const tagsWithBoxes = props.image?.tags?.filter(tag => tag.name && tag.origin.box && Object.keys(tag.origin.box).length !== 0 && Object.getPrototypeOf(tag.origin.box) === Object.prototype);
             tagsWithBoxes?.forEach(tag => {
                 const color = 'green';
@@ -86,7 +121,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     strokeUniform: true,
                     selectable: false,
                 });
-                editor?.canvas.add(rectangle);
+                canvas.add(rectangle);
 
                 const textSpacing = 20;
                 const fontSize = 14;
@@ -101,7 +136,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     angle: 0,
                     selectable: false,
                 });
-                editor?.canvas.add(block);
+                canvas.add(block);
                 var text = new fabric.Text(`${tag.name}: ${(Math.round(tag.origin.confidence * 100) / 100).toFixed(2)}`, {
                     fontFamily: 'Calibri',
                     fontSize: fontSize,
@@ -111,42 +146,13 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     fill: 'white',
                     selectable: false,
                 });
-                editor?.canvas.add(text);
+                canvas.add(text);
             });
-
-            // drawing mode only
-            if (draw) {
-                const deleteImage = new Image();
-                var deleteIcon = "data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3E%3Csvg version='1.1' id='Ebene_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' width='595.275px' height='595.275px' viewBox='200 215 230 470' xml:space='preserve'%3E%3Ccircle style='fill:%23F44336;' cx='299.76' cy='439.067' r='218.516'/%3E%3Cg%3E%3Crect x='267.162' y='307.978' transform='matrix(0.7071 -0.7071 0.7071 0.7071 -222.6202 340.6915)' style='fill:white;' width='65.545' height='262.18'/%3E%3Crect x='266.988' y='308.153' transform='matrix(0.7071 0.7071 -0.7071 0.7071 398.3889 -83.3116)' style='fill:white;' width='65.544' height='262.179'/%3E%3C/g%3E%3C/svg%3E";
-                deleteImage.src = deleteIcon;
-                fabric.Object.prototype.controls.deleteControl = new fabric.Control({
-                    x: 0.5,
-                    y: -0.5,
-                    offsetY: 16,
-                    cursorStyle: 'pointer',
-                    mouseUpHandler: (eventData, transformData, x, y): boolean => {
-                        var target = transformData.target;
-                        var canvas = target.canvas;
-                        canvas.remove(target);
-                        canvas.requestRenderAll();
-                        return true
-                    },
-                    render: (ctx, left, top, styleOverride, fabricObject) => {
-                        var size = 24;
-                        ctx.save();
-                        ctx.translate(left, top);
-                        ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
-                        ctx.drawImage(deleteImage, -size / 2, -size / 2, size, size);
-                        ctx.restore();
-                    },
-                });
-                onAddRectangle();
-            }
         }
     }
 
-    const onAddRectangle = () => {
-        if (editor?.canvas?._objects?.filter(object => object.selectable).length == 0) {
+    const addRectangleClassification = () => {
+        if (canvas?._objects?.filter(object => object.selectable).length == 0) {
             const rectangle = new fabric.Rect({
                 width: 100,
                 height: 100,
@@ -161,10 +167,49 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 ...fabric.Rect.prototype.controls,
                 mtr: new fabric.Control({ visible: false })
             }
-            editor?.canvas.add(rectangle);
-            editor?.canvas.centerObject(rectangle);
-            editor?.canvas.setActiveObject(editor?.canvas._objects[editor?.canvas._objects.length - 1])
+            canvas.add(rectangle);
+            canvas.centerObject(rectangle);
+            console.log(canvas._objects[canvas._objects.length - 1])
+            canvas.setActiveObject(canvas._objects[canvas._objects.length - 1]);
+            canvas.bringToFront(canvas._objects[canvas._objects.length - 1])
+            console.log("after adding rect")
         }
+    }
+
+    const initFabricDeleteControl = () => {
+        const deleteImage = new Image();
+        var deleteIcon = "data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3E%3Csvg version='1.1' id='Ebene_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' width='595.275px' height='595.275px' viewBox='200 215 230 470' xml:space='preserve'%3E%3Ccircle style='fill:%23F44336;' cx='299.76' cy='439.067' r='218.516'/%3E%3Cg%3E%3Crect x='267.162' y='307.978' transform='matrix(0.7071 -0.7071 0.7071 0.7071 -222.6202 340.6915)' style='fill:white;' width='65.545' height='262.18'/%3E%3Crect x='266.988' y='308.153' transform='matrix(0.7071 0.7071 -0.7071 0.7071 398.3889 -83.3116)' style='fill:white;' width='65.544' height='262.179'/%3E%3C/g%3E%3C/svg%3E";
+        deleteImage.src = deleteIcon;
+        fabric.Object.prototype.controls.deleteControl = new fabric.Control({
+            x: 0.5,
+            y: -0.5,
+            offsetY: 16,
+            cursorStyle: 'pointer',
+            mouseUpHandler: (eventData, transformData, x, y): boolean => {
+                var target = transformData.target;
+                var canvas = target.canvas;
+                canvas.remove(target);
+                canvas.requestRenderAll();
+                return true
+            },
+            render: (ctx, left, top, styleOverride, fabricObject) => {
+                var size = 24;
+                ctx.save();
+                ctx.translate(left, top);
+                ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
+                ctx.drawImage(deleteImage, -size / 2, -size / 2, size, size);
+                ctx.restore();
+            },
+        });
+    }
+
+    const tagsWithEditing = () => {
+        tagsNoEditing();
+        addRectangleClassification();
+    }
+
+    const tagsNoEditing = () => {
+        loadTags();
     }
 
     /**
@@ -198,7 +243,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         const body = onCrop();
         props.api.putImageCrop(body);  // update current image
         props.updateParent();
-        setDraw(true);
+        changeMode('draw');
     }
 
     /**
@@ -207,6 +252,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const cropNewImage = () => {
         const body = onCrop();
         props.api.postImageCrop(body);  // create a new image
+        props.updateParent();
     }
 
     const copyImage = () => {
@@ -220,13 +266,13 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     }
 
     const onBox = async (tagName: string) => {
-        if (editor?.canvas?._objects?.filter(object => object.selectable).length !== 1) {
+        if (canvas?._objects?.filter(object => object.selectable).length !== 1) {
             alert('There is no bounding box!'); return;
         }
         if (tagName === "") {
             alert('There is no tag name!'); return;
         }
-        const selectedObject = editor?.canvas._objects.find(object => object.selectable);
+        const selectedObject = canvas._objects.find(object => object.selectable);
         let tlx = selectedObject.oCoords.tl.x;
         let tly = selectedObject.oCoords.tl.y;
         let brx = selectedObject.oCoords.br.x;
@@ -269,7 +315,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         await props.api.putImageTagsPush(body);
         alert(`tag '${tagName}' added`);
         props.updateParent();
-        editor?.canvas?.forEachObject((object) => { object.selectable = false });
+        canvas?.forEachObject((object) => { object.selectable = false });
     }
 
     const selectGarment = async (tagName: string) => {
@@ -277,18 +323,20 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     }
 
     const WrapperLoopGarment = (garmentObject: object, title: string, closeOnSelect: boolean) => {
-        return <Dropdown closeOnSelect={closeOnSelect}>
-            <Dropdown.Button flat color="secondary">
-                {title}
-            </Dropdown.Button>
-            <Dropdown.Menu
-                color="secondary"
-                aria-label="Actions"
-                css={{ $$dropdownMenuWidth: "280px" }}
-            >
-                {loopGarment(garmentObject, 0)}
-            </Dropdown.Menu>
-        </Dropdown>
+        return <>
+            <Button onPress={() => { addRectangleClassification(); }}>ADD RECTANGLE</Button>
+            <Dropdown closeOnSelect={closeOnSelect}>
+                <Dropdown.Button flat color="secondary">
+                    {title}
+                </Dropdown.Button>
+                <Dropdown.Menu
+                    color="secondary"
+                    aria-label="Actions"
+                    css={{ $$dropdownMenuWidth: "280px" }}
+                >
+                    {loopGarment(garmentObject, 0)}
+                </Dropdown.Menu>
+            </Dropdown></>
     }
 
     const loopGarment = (garmentObject: object, loop: number) => {
@@ -316,11 +364,10 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
 
     return (
         <>
-            {crop && props.modeSelactable ?
+            {mode == 'crop' && props.modeSelactable ?
                 <>
-                    {/* cropping mode */}
                     <Cropper
-                        src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}/${props.image.extension}?${date}`}
+                        src={`${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}/${props.image.extension}?${new Date().toISOString()}`}
                         style={{ marginLeft: "auto", marginRight: "auto", height: size.height, width: size.width }}
                         aspectRatio={1}
                         autoCropArea={1}
@@ -334,26 +381,17 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     <Button auto onPress={copyImage} css={{ marginLeft: "auto", marginRight: "auto" }} color="success">COPY IMAGE</Button>
                 </>
                 :
-                draw && props.modeSelactable ?
-                    <div style={{ display: "grid", justifyContent: "center" }}>
-                        {/* drawing mode */}
-                        <FabricJSCanvas className="sample-canvas" onReady={onReady} />
-                        <br />
-                        {WrapperLoopGarment(garment, 'Garment', false)}
-                        <br />
-                    </div>
-                    :
-                    <>
-                        {/* no mode */}
-                        <div style={{ display: "grid", justifyContent: "center" }}>
-                            <FabricJSCanvas className="sample-canvas" onReady={onReady} />
-                        </div>
-                    </>
+                <div style={{ display: "grid", justifyContent: "center" }}>
+                    <canvas id="canvas" />
+                    <br />
+                    {mode == 'draw' && props.modeSelactable ? WrapperLoopGarment(garment, 'Garment', false) : <></>}
+                    <br />
+                </div>
             }
             <Button.Group color="warning">
-                <Button auto onPress={() => { setDraw(false); setCrop(true) }} css={{ color: "black" }}>START CROPING</Button>
-                <Button auto onPress={() => { setDraw(true); setCrop(false); loadRectangles(); }} css={{ color: "black" }}>START DRAWING</Button>
-                <Button auto onPress={() => { setDraw(false); setCrop(false) }} css={{ color: "black" }}>DEFAULT</Button>
+                <Button auto onPress={() => { changeMode('crop'); }} css={{ color: "black" }}>START CROPING</Button>
+                <Button auto onPress={() => { changeMode('draw'); }} css={{ color: "black" }}>START DRAWING</Button>
+                <Button auto onPress={() => { changeMode('default'); }} css={{ color: "black" }}>DEFAULT</Button>
             </Button.Group>
         </>
     );
