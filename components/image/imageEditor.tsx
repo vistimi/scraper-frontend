@@ -213,6 +213,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         const body: ImageCopySchema = {
             origin: props.image.origin,
             originID: props.image.originID,
+            name: props.image.name,
             extension: props.image.extension,
         };
         props.api.copyImage(body);  // create a new image

@@ -22,6 +22,7 @@ export interface ImageCropSchema {
 export interface ImageCopySchema {
     origin: string,
     originID: string,
+    name: string,
     extension: string,
 }
 
