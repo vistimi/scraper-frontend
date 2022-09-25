@@ -101,13 +101,19 @@ export default function ImagesPending() {
         }
     }
 
-    const deleteImage = async () => {
+    const postImageUnwanted = async () => {
         const bodyPostImageUnwantedSchema: PostImageUnwantedSchema = {
             _id: image._id,
             origin: origin,
             originID: image.originID,
         }
         await api.postImageUnwanted(bodyPostImageUnwantedSchema);   // insert unwanted image
+        await api.deleteImage(image._id);   // delete pending image
+        setPage(page - 1);
+        await getIDs(origin);
+    };
+
+    const deleteImage = async () => {
         await api.deleteImage(image._id);   // delete pending image
         setPage(page - 1);
         await getIDs(origin);
@@ -204,8 +210,9 @@ export default function ImagesPending() {
                     }
                     <div>UserID: {image.user.originID}</div>
                     <div>UserName: {image.user.name}</div>
-                    <Button shadow color="error" auto onPress={postUserUnwanted} css={{ color: "black" }}>REMOVE USER</Button>
+                    <Button shadow color="error" auto onPress={postUserUnwanted} css={{ color: "black" }}>UNWANTED USER</Button>
                     <Button shadow color="error" auto onPress={deleteImage} css={{ color: "black" }}>REMOVE IMAGE</Button>
+                    <Button shadow color="error" auto onPress={postImageUnwanted} css={{ color: "black" }}>UNWANTED IMAGE</Button>
                 </> :
                 <></>
             }
