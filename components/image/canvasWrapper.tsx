@@ -29,7 +29,7 @@ export interface CanvasWrapperFunctions {
 }
 
 const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Ref<CanvasWrapperFunctions>) => {
-    const canvasDimensions = { tlx: 0, tly: 0, width: 500, height: 500 };
+    const [canvasDimensions, setCanvasDimensions] = useState<RectangleDimensions>({ tlx: 0, tly: 0, width: 500, height: 500 });
     const canvasRef = useRef<HTMLCanvasElement>(null);
     let backgroundImage: HTMLImageElement = null;
     let activeRectangle: RectangleInformations = {
@@ -38,7 +38,8 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
         color: '',
         dimensions: { tlx: 100, tly: 200, width: 300, height: 200 },
     };
-    let rectangles: RectangleInformations[] = [activeRectangle];
+    // const [rectangles, setRectangles] = useState<RectangleInformations[]>([]);
+    let rectangles: RectangleInformations[] = [];
 
 
     let mouseX = [0, 0];
@@ -57,7 +58,7 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
             canvasRef.current?.addEventListener('mousemove', mouseMove, false);
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        []
+        [canvasRef.current]
     )
 
     useImperativeHandle(reference, () => ({
@@ -142,20 +143,21 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
         if (context) {
             context?.clearRect(canvasDimensions.tlx, canvasDimensions.tly, canvasDimensions.width, canvasDimensions.height);
             drawBackground(context);
-            rectangles.forEach(rectangle => drawRectangle(context, rectangle))
+            rectangles.forEach(rectangle => { if (!rectangle.active) drawRectangleBoundary(context, rectangle); })
+
+            // draw active rectangle
+            context.fillStyle = activeRectangle.color;
+            context.fillRect(activeRectangle.dimensions.tlx, activeRectangle.dimensions.tly, activeRectangle.dimensions.width, activeRectangle.dimensions.height);
+            drawHandle(context, activeRectangle.dimensions);
         }
     }
 
-    const drawRectangle = (context: CanvasRenderingContext2D, rectangle: RectangleInformations) => {
-        if (rectangle.active) {
-            context.fillStyle = "rgb(0, 0, 250, 0.1)";
-            context.fillRect(rectangle.dimensions.tlx, rectangle.dimensions.tly, rectangle.dimensions.width, rectangle.dimensions.height);
-            drawHandle(context, rectangle.dimensions);
-        } else {
-            context.strokeStyle = rectangle.color;
-            context.fillStyle = "rgb(0, 0, 250, 0.1)";
-            context.fillRect(rectangle.dimensions.tlx, rectangle.dimensions.tly, rectangle.dimensions.width, rectangle.dimensions.height)
-        }
+    const drawRectangleBoundary = (context: CanvasRenderingContext2D, rectangle: RectangleInformations) => {
+        console.log()
+        context.strokeStyle = rectangle.color;
+        context.rect(rectangle.dimensions.tlx, rectangle.dimensions.tly, rectangle.dimensions.width, rectangle.dimensions.height);
+        context.stroke();
+        // context.fillRect(rectangle.dimensions.tlx, rectangle.dimensions.tly, rectangle.dimensions.width, rectangle.dimensions.height)
     }
 
     const drawHandle = (context: CanvasRenderingContext2D, rectangleDimensions: RectangleDimensions) => {
@@ -170,6 +172,7 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
         context.beginPath();
         context.arc(x, y, radius, 0, 2 * Math.PI);
         context.fill();
+        context.closePath();
     }
 
     const drawBackground = (context: CanvasRenderingContext2D) => {
@@ -195,15 +198,9 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
     }
 
     const setCanvas = (url: string, tags: RectangleInformations[]) => {
-        rectangles = tags;
-        const activeRectangle: RectangleInformations = {
-            active: true,
-            name: '',
-            color: '',
-            dimensions: { tlx: 100, tly: 200, width: 300, height: 200 },
-        }
-        rectangles.push(activeRectangle);
-        updateActiveRectangle();
+        rectangles = tags
+        setCanvasDimensions({ tlx: 0, tly: 0, width: 500, height: 500 });
+        // draw();
     }
 
     const updateActiveRectangle = () => {

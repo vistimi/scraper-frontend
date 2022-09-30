@@ -391,7 +391,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                         [{
                             active: false,
                             name: "t-shirt: 0.8",
-                            color: 'green',
+                            color: 'black',
                             dimensions: {tlx: 10, tly: 10, width: 50, height: 50}
                         }])}/>
                     <br />
