@@ -15,15 +15,13 @@
         "@nextui-org/react": "^1.0.0-beta.10",
         "cors": "^2.8.5",
         "dotenv": "^16.0.2",
-        "fabric": "^4.6.0",
-        "fabricjs-react": "^1.0.8",
+        "fabric": "^5.2.4",
         "next": "^12.3.0",
         "react": "^18.2.0",
         "react-cropper": "^2.1.8",
         "react-dom": "^18.2.0"
     },
     "devDependencies": {
-        "@types/fabric": "^4.5.9",
         "@types/node": "^18.7.16",
         "@types/react": "^17.0.1",
         "dotenv": "^16.0.2",

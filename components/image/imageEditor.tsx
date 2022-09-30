@@ -7,6 +7,7 @@ import { ImageSchema } from '@apiTypes/responseSchema';
 import { ImageCopySchema, ImageCropSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema";
 import { fabric } from 'fabric';
 import { Garment } from "@apiTypes/garnment";
+import CanvasWrapper, { CanvasWrapperFunctions } from "./canvasWrapper";
 
 interface ImageEditorProps {
     api: Api,
@@ -17,6 +18,7 @@ interface ImageEditorProps {
 
 export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const cropperRef = useRef<HTMLImageElement>(null);
+    const canvasWrapperRef = useRef<CanvasWrapperFunctions>(null);
     const [mode, setMode] = useState<string>('default');
     const garment = Garment;
     const [size, setSize] = useState<{ width: number, height: number }>({ width: 0, height: 0 });
@@ -30,6 +32,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             setCanvas(canvas);
             updateCanvas();
             initFabricDeleteControl();
+            canvasWrapperRef.current?.draw();   // render the canvas
 
             return () => {
                 canvas.dispose();
@@ -382,7 +385,15 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 </>
                 :
                 <div style={{ display: "grid", justifyContent: "center" }}>
-                    <canvas id="canvas" />
+                    <CanvasWrapper ref={canvasWrapperRef}/>
+                    <Button onClick={() => canvasWrapperRef.current?.setCanvas(
+                        'https://upload.wikimedia.org/wikipedia/commons/1/11/Test-Logo.svg',
+                        [{
+                            active: false,
+                            name: "t-shirt: 0.8",
+                            color: 'green',
+                            dimensions: {tlx: 10, tly: 10, width: 50, height: 50}
+                        }])}/>
                     <br />
                     {mode == 'draw' && props.modeSelactable ? WrapperLoopGarment(garment, 'Garment', false) : <></>}
                     <br />
