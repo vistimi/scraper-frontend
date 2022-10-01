@@ -32,7 +32,6 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             setCanvas(canvas);
             updateCanvas();
             initFabricDeleteControl();
-            canvasWrapperRef.current?.draw();   // render the canvas
 
             return () => {
                 canvas.dispose();
@@ -385,15 +384,20 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 </>
                 :
                 <div style={{ display: "grid", justifyContent: "center" }}>
-                    <CanvasWrapper ref={canvasWrapperRef}/>
-                    <Button onClick={() => canvasWrapperRef.current?.setCanvas(
-                        'https://upload.wikimedia.org/wikipedia/commons/1/11/Test-Logo.svg',
-                        [{
+                    <CanvasWrapper ref={canvasWrapperRef} rectangles={[
+                        {
                             active: false,
                             name: "t-shirt: 0.8",
                             color: 'black',
-                            dimensions: {tlx: 10, tly: 10, width: 50, height: 50}
-                        }])}/>
+                            dimensions: { tlx: 10, tly: 10, width: 50, height: 50 }
+                        }, {
+                            active: true,
+                            name: "",
+                            color: "rgb(0, 0, 200, 0.2)",
+                            dimensions: { tlx: 100, tly: 100, width: 200, height: 200 }
+                        },
+                    ]} backgroundUrl={'test'} />
+                    <Button onClick={() => console.log(canvasWrapperRef.current?.getDimensions())} />
                     <br />
                     {mode == 'draw' && props.modeSelactable ? WrapperLoopGarment(garment, 'Garment', false) : <></>}
                     <br />
