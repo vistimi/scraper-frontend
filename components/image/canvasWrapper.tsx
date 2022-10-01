@@ -5,14 +5,14 @@ interface CanvasWrapperProps {
     rectangles: RectangleInformations[] | undefined,
 }
 
-interface RectangleDimensions {
+export interface RectangleDimensions {
     tlx: number;
     tly: number;
     width: number;
     height: number;
 }
 
-interface RectangleInformations {
+export interface RectangleInformations {
     active: boolean;
     name: string;
     color: string;
@@ -20,17 +20,16 @@ interface RectangleInformations {
 }
 
 export interface CanvasWrapperFunctions {
-    getDimensions: () => RectangleDimensions;
-    draw: () => void;
+    getSelectedRectangleDimensions: () => RectangleDimensions;
 }
 
 const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Ref<CanvasWrapperFunctions>) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    
+
     let canvasDimensions: RectangleDimensions = { tlx: 0, tly: 0, width: 500, height: 500 };
     let backgroundImage: HTMLImageElement = null;
     let activeRectangles: RectangleInformations[] = [];
-    let latestDragRectangle: RectangleInformations = null;
+    let selectedRectangle: RectangleInformations = null;
     let mouseX = [0, 0];
     let mouseY = [0, 0];
     let closeEnough = 10;
@@ -60,8 +59,7 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
     )
 
     useImperativeHandle(reference, () => ({
-        getDimensions,
-        draw,
+        getSelectedRectangleDimensions,
     })
     );
 
@@ -76,23 +74,23 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
         updateMouse(e);
         for (const activeRectangle of activeRectangles) {
             if (checkCloseEnough(mouseX[0], activeRectangle.dimensions.tlx) && checkCloseEnough(mouseY[0], activeRectangle.dimensions.tly)) {
-                dragTL = true; latestDragRectangle = activeRectangle; return;
+                dragTL = true; selectedRectangle = activeRectangle; return;
             }
             // 2. top right
             else if (checkCloseEnough(mouseX[0], activeRectangle.dimensions.tlx + activeRectangle.dimensions.width) && checkCloseEnough(mouseY[0], activeRectangle.dimensions.tly)) {
-                dragTR = true; latestDragRectangle = activeRectangle; return;
+                dragTR = true; selectedRectangle = activeRectangle; return;
             }
             // 3. bottom left
             else if (checkCloseEnough(mouseX[0], activeRectangle.dimensions.tlx) && checkCloseEnough(mouseY[0], activeRectangle.dimensions.tly + activeRectangle.dimensions.height)) {
-                dragBL = true; latestDragRectangle = activeRectangle; return;
+                dragBL = true; selectedRectangle = activeRectangle; return;
             }
             // 4. bottom right
             else if (checkCloseEnough(mouseX[0], activeRectangle.dimensions.tlx + activeRectangle.dimensions.width) && checkCloseEnough(mouseY[0], activeRectangle.dimensions.tly + activeRectangle.dimensions.height)) {
-                dragBR = true; latestDragRectangle = activeRectangle; return;
+                dragBR = true; selectedRectangle = activeRectangle; return;
             }
             // 5. rectangle
             else if (mouseX[0] > activeRectangle.dimensions.tlx && mouseX[0] < activeRectangle.dimensions.tlx + activeRectangle.dimensions.width && mouseY[0] > activeRectangle.dimensions.tly && mouseY[0] < activeRectangle.dimensions.tly + activeRectangle.dimensions.height) {
-                dragTL = dragTR = dragBL = dragBR = true; latestDragRectangle = activeRectangle; return;
+                dragTL = dragTR = dragBL = dragBR = true; selectedRectangle = activeRectangle; return;
             }
         }
     }
@@ -106,27 +104,27 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
     }
 
     const mouseMove = (e: MouseEvent) => {
-        if (!(dragTL || dragTR || dragBL || dragBR) || !latestDragRectangle) return;
+        if (!(dragTL || dragTR || dragBL || dragBR) || !selectedRectangle) return;
         updateMouse(e)
         if (dragTL && dragTR && dragBL && dragBR) {
-            latestDragRectangle.dimensions.tlx += mouseX[0] - mouseX[1];
-            latestDragRectangle.dimensions.tly += mouseY[0] - mouseY[1];
+            selectedRectangle.dimensions.tlx += mouseX[0] - mouseX[1];
+            selectedRectangle.dimensions.tly += mouseY[0] - mouseY[1];
         } else if (dragTL) {
-            latestDragRectangle.dimensions.width += latestDragRectangle.dimensions.tlx - mouseX[0];
-            latestDragRectangle.dimensions.height += latestDragRectangle.dimensions.tly - mouseY[0];
-            latestDragRectangle.dimensions.tlx = mouseX[0];
-            latestDragRectangle.dimensions.tly = mouseY[0];
+            selectedRectangle.dimensions.width += selectedRectangle.dimensions.tlx - mouseX[0];
+            selectedRectangle.dimensions.height += selectedRectangle.dimensions.tly - mouseY[0];
+            selectedRectangle.dimensions.tlx = mouseX[0];
+            selectedRectangle.dimensions.tly = mouseY[0];
         } else if (dragTR) {
-            latestDragRectangle.dimensions.width = Math.abs(latestDragRectangle.dimensions.tlx - mouseX[0]);
-            latestDragRectangle.dimensions.height += latestDragRectangle.dimensions.tly - mouseY[0];
-            latestDragRectangle.dimensions.tly = mouseY[0];
+            selectedRectangle.dimensions.width = Math.abs(selectedRectangle.dimensions.tlx - mouseX[0]);
+            selectedRectangle.dimensions.height += selectedRectangle.dimensions.tly - mouseY[0];
+            selectedRectangle.dimensions.tly = mouseY[0];
         } else if (dragBL) {
-            latestDragRectangle.dimensions.width += latestDragRectangle.dimensions.tlx - mouseX[0];
-            latestDragRectangle.dimensions.height = Math.abs(latestDragRectangle.dimensions.tly - mouseY[0]);
-            latestDragRectangle.dimensions.tlx = mouseX[0];
+            selectedRectangle.dimensions.width += selectedRectangle.dimensions.tlx - mouseX[0];
+            selectedRectangle.dimensions.height = Math.abs(selectedRectangle.dimensions.tly - mouseY[0]);
+            selectedRectangle.dimensions.tlx = mouseX[0];
         } else if (dragBR) {
-            latestDragRectangle.dimensions.width = Math.abs(latestDragRectangle.dimensions.tlx - mouseX[0]);
-            latestDragRectangle.dimensions.height = Math.abs(latestDragRectangle.dimensions.tly - mouseY[0]);
+            selectedRectangle.dimensions.width = Math.abs(selectedRectangle.dimensions.tlx - mouseX[0]);
+            selectedRectangle.dimensions.height = Math.abs(selectedRectangle.dimensions.tly - mouseY[0]);
         }
         draw();
     }
@@ -187,9 +185,25 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
         context.fillRect(canvasDimensions.tlx, canvasDimensions.tly, canvasDimensions.width, canvasDimensions.height);
     }
 
-    const getDimensions = (): RectangleDimensions => {
-        if (!latestDragRectangle) return null;
-        return adaptDimensions(latestDragRectangle.dimensions);
+    const getSelectedRectangleDimensions = (): RectangleDimensions => {
+        if (!selectedRectangle) return null;
+        const adaptedSelectedRectangleDimensions = adaptRectangleDimensionsToCanvas(selectedRectangle.dimensions);
+        const minSizeForSelectedRectangle = 50;
+        if (adaptedSelectedRectangleDimensions.width < minSizeForSelectedRectangle ||
+            adaptedSelectedRectangleDimensions.height < minSizeForSelectedRectangle) return null;
+        return adaptedSelectedRectangleDimensions;
+    }
+
+    const adjustCanvasDimensions = () => {
+        const maxCanvasSize = 500;
+        if (canvasDimensions.height > maxCanvasSize) {
+            canvasDimensions.width = canvasDimensions.width * maxCanvasSize / canvasDimensions.height;
+            canvasDimensions.height = maxCanvasSize;
+        }
+        if (canvasDimensions.width > maxCanvasSize) {
+            canvasDimensions.height = canvasDimensions.height * maxCanvasSize / canvasDimensions.width;
+            canvasDimensions.width = maxCanvasSize;
+        }
     }
 
     const setBackground = () => {
@@ -197,13 +211,12 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
         background.src = props.backgroundUrl;
         background.onload = function () {
             backgroundImage = background;
-            canvasDimensions = { tlx: canvasDimensions.tlx, tly: canvasDimensions.tly, width: canvasDimensions.width, height: canvasDimensions.height };
-            canvasRef.current.width = backgroundImage.width;
-            canvasRef.current.height = backgroundImage.height;
+            canvasDimensions = { tlx: canvasDimensions.tlx, tly: canvasDimensions.tly, width: background.width, height: background.height };
+            adjustCanvasDimensions();
         }
     }
 
-    const adaptDimensions = (rectangleDimensions: RectangleDimensions): RectangleDimensions => {
+    const adaptRectangleDimensionsToCanvas = (rectangleDimensions: RectangleDimensions): RectangleDimensions => {
         if (rectangleDimensions.tlx < 0) rectangleDimensions.tlx = 0;
         if (rectangleDimensions.tly < 0) rectangleDimensions.tly = 0;
         if (rectangleDimensions.tlx > canvasDimensions.width) rectangleDimensions.tlx = canvasDimensions.width;
@@ -215,7 +228,7 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
 
     const updateActiveRectangles = () => {
         activeRectangles = props.rectangles.filter(rectangle => rectangle.active);
-        if (activeRectangles.length) latestDragRectangle = activeRectangles[0];
+        if (activeRectangles.length) selectedRectangle = activeRectangles[0];
     }
 
     return (
