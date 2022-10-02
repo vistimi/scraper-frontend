@@ -1,11 +1,9 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import Cropper from "react-cropper";
+import React, { useEffect, useRef, useState } from "react";
 import "cropperjs/dist/cropper.css";
 import { Button, Checkbox, Dropdown, Input } from "@nextui-org/react";
 import { Api } from "@services/api";
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { ImageCopySchema, ImageCropSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema";
-import { fabric } from 'fabric';
 import { Garment } from "@apiTypes/garnment";
 import CanvasWrapper, { CanvasWrapperFunctions, RectangleInformations } from "./canvasWrapper";
 
@@ -18,39 +16,61 @@ interface ImageEditorProps {
 
 export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const canvasWrapperRef = useRef<CanvasWrapperFunctions>(null);
-    const [rectangles, setRectangles] = useState<RectangleInformations[]>([]);
-    const [showActiveRectangles, setShowActiveRectangles] = useState<boolean>(true);
-    const garment = Garment;
-
-    let tagsRectangles: RectangleInformations[] = [
+    const [passiveRectangles, setPassiveRectangles] = useState<RectangleInformations[]>([
         {
             active: false,
             name: "t-shirt: 0.8",
             color: 'black',
             dimensions: { tlx: 10, tly: 10, width: 50, height: 50 }
         }
-    ];
-    let activeRectangles: RectangleInformations[] = [
+    ]);
+    const [activeRectangles, setActiveRectangles] = useState<RectangleInformations[]>([
         {
             active: true,
             name: "",
             color: "rgb(0, 0, 200, 0.2)",
             dimensions: { tlx: 100, tly: 100, width: 200, height: 200 }
         }
-    ]; // only one or none used so far
+    ]);
+    const [showActiveRectangles, setShowActiveRectangles] = useState<boolean>(true);
+    const garment = Garment;
 
     // fires after the render is committed to the screen
     useEffect(
         () => {
             if (showActiveRectangles) {
-                const concatRectangles = tagsRectangles.concat(activeRectangles);
-                setRectangles(concatRectangles);
+                setActiveRectangles(
+                    [
+                        {
+                            active: true,
+                            name: "",
+                            color: "rgb(0, 0, 200, 0.2)",
+                            dimensions: { tlx: 100, tly: 100, width: 200, height: 200 }
+                        }
+                    ]
+                );
             } else {
-                setRectangles(tagsRectangles);
+                setActiveRectangles([]);
             }
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [props.image, showActiveRectangles]
+        [showActiveRectangles]
+    )
+
+    useEffect(
+        () => {
+            setPassiveRectangles(
+                [
+                    {
+                        active: false,
+                        name: "t-shirt: 0.8",
+                        color: 'black',
+                        dimensions: { tlx: 10, tly: 10, width: 50, height: 50 }
+                    }
+                ]
+            )
+        },
+        [props.image]
+
     )
 
     /**
@@ -185,7 +205,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     return (
         <>
             <div style={{ display: "grid", justifyContent: "center" }}>
-                <CanvasWrapper ref={canvasWrapperRef} rectangles={rectangles} backgroundUrl={'test'} />
+                <CanvasWrapper ref={canvasWrapperRef} passiveRectangles={passiveRectangles} activeRectangles={activeRectangles } backgroundUrl={'test'} />
                 <Checkbox defaultSelected={showActiveRectangles} onChange={onChangeShowActiveRectangles} >Show active boxes</Checkbox>
                 <br />
                 {showActiveRectangles && props.interactWithCanvas ? WrapperLoopGarment(garment, 'Garment', false) : <></>}

@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
+    "downlevelIteration": true, // for...of-loops can now be downlevel-compiled with correct semantics
     "lib": [
       "dom",
       "dom.iterable",
