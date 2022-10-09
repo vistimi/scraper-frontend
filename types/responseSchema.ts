@@ -31,8 +31,8 @@ export interface UserSchema {
 }
 
 export interface BoxSchema {
-    x: number,
-    y: number,
+    tlx: number,
+    tly: number,
     width: number,
     height: number,
 }

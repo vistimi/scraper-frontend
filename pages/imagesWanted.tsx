@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Api } from "@services/api";
-import { Button, Pagination, Image, Table } from '@nextui-org/react';
+import { Button, Pagination, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { PostImageTransfer } from '@apiTypes/requestSchema';
 import { NavBar } from '@components/global/navBar';
@@ -96,14 +96,10 @@ export default function ImagesWanted() {
             {/* Image informations */}
             {image ?
                 <>
-                    {/* <Image
-                        src={`${api.hostName()}/image/file/${image.origin}/${image.originID}/${image.extension}?${new Date().toISOString()}`}
-                        width={image.size[0].box.width}
-                        height={image.size[0].box.height}
-                        alt='image'
-                    /> */}
-                    <ImageEditor api={api} image={image} updateParent={async () => { await imageFromPage(page) }} modeSelactable={false} key='imageEditor' />
+                    <ImageEditor api={api} image={image} updateParent={async () => { await imageFromPage(page) }} interactWithCanvas={false} key='imageEditor' />
+
                     <Button shadow color="error" auto onPress={postImageTransfer} css={{ color: "black" }}>PENDING IMAGE</Button>
+                    
                     <div>_id: {image._id}</div>
                     <div>originID: {image.originID}</div>
                     <div>width: {image.size[0].box.width}</div>

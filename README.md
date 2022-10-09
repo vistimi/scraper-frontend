@@ -43,6 +43,8 @@ packages:
     sudo docker run -it -p 3000:3000 --rm --name dataset-gui-run dataset-gui-img
 ## .env
 
+Declare the type of each env variable inside environment.d.ts
+
     NEXT_PUBLIC_API_URL=http://localhost:8080
 
 ## AWS Bash scripts
@@ -50,4 +52,6 @@ packages:
     find scripts/ -type f -exec chmod +x {} \;    
 
     ./scripts/<script-file>
+
+npm install --save-dev jest jest-environment-jsdom @types/jest ts-jest @testing-library/react @testing-library/jest-dom
 

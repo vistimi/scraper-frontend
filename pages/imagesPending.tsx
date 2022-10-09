@@ -166,7 +166,7 @@ export default function ImagesPending() {
             {/* Image informations */}
             {image ?
                 <>
-                    <ImageEditor api={api} image={image} updateParent={async () => { await imageFromPage(page) }} modeSelactable={true} key='imageEditor' />
+                    <ImageEditor api={api} image={image} updateParent={async () => { await imageFromPage(page) }} interactWithCanvas={true} key='imageEditor' />
                     <Button shadow color="success" auto onPress={postImageTransfer} css={{ color: "black" }}>WANTED IMAGE</Button>
                     <div>_id: {image._id}</div>
                     <div>originID: {image.originID}</div>
