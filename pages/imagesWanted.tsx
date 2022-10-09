@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Api } from "@services/api";
-import { Button, Pagination, Image, Table } from '@nextui-org/react';
+import { Button, Pagination, Table } from '@nextui-org/react';
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { PostImageTransfer } from '@apiTypes/requestSchema';
 import { NavBar } from '@components/global/navBar';

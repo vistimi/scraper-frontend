@@ -1,11 +1,10 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import "cropperjs/dist/cropper.css";
+import React, { useEffect, useRef, useState } from "react";
 import { Button, Checkbox, Dropdown } from "@nextui-org/react";
 import { Api } from "@services/api";
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { ImageCopySchema, ImageCropSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema";
 import { Garment } from "@apiTypes/garnment";
-import CanvasWrapper, { CanvasWrapperFunctions, CanvasWrapperProps, RectangleInformations } from "./canvasWrapper";
+import CanvasWrapper, { CanvasWrapperFunctions, CanvasWrapperProps } from "./canvasWrapper";
 
 interface ImageEditorProps {
     api: Api,
