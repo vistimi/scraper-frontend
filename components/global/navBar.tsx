@@ -12,9 +12,10 @@ export const NavBar = (): JSX.Element => {
                     </Text>
                 </Navbar.Brand>
                 <Navbar.Content hideIn="xs">
-                    <Navbar.Link href="/imagesPending">imagesPending</Navbar.Link>
-                    <Navbar.Link href="/imagesUnwanted">imagesUnwanted</Navbar.Link>
-                    <Navbar.Link href="/imagesWanted">imagesWanted</Navbar.Link>
+                    <Navbar.Link href="/pending">pending</Navbar.Link>
+                    <Navbar.Link href="/validation">validation</Navbar.Link>
+                    <Navbar.Link href="/production">production</Navbar.Link>
+                    <Navbar.Link href="/undesired">undesired</Navbar.Link>
                     <Navbar.Link href="/tags">tags</Navbar.Link>
                     <Navbar.Link href="/users">users</Navbar.Link>
                 </Navbar.Content>

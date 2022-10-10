@@ -3,7 +3,7 @@ import { Button, Checkbox, Dropdown } from "@nextui-org/react";
 import { Api } from "@services/api";
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { ImageCopySchema, ImageCropSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema";
-import { Garment } from "@apiTypes/garnment";
+import { Garment, GarmentInformations } from "@apiTypes/garnment";
 import CanvasWrapper, { CanvasWrapperFunctions, CanvasWrapperProps } from "./canvasWrapper";
 
 interface ImageEditorProps {
@@ -103,13 +103,14 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             extension: props.image.extension,
         };
         props.api.copyImage(body);  // create a new image
+        props.updateParent();
     }
 
     /**
-     *  requestUpdateTags add a tag to an image in the backend
+     *  requestAddTags add a tag to an image in the backend
      * @param tagName the name of the new tag
      */
-    const requestUpdateTags = async (tagName: string) => {
+    const requestAddTags = async (tagName: string) => {
         if (tagName === "") {
             alert('there is no tag name'); return;
         }
@@ -143,21 +144,22 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         props.updateParent();
     }
 
-    type RecursiveMapOf<T> = Map<T, RecursiveMapOf<T>>  // recursive map type
+    type RecursiveMapOf<T> = Map<string, RecursiveMapOf<T>>  // recursive map type
     type ValueOrMap<T> = T | RecursiveMapOf<T>; // type or recursive map type
-    type StringOrMapOfString = ValueOrMap<string>;  // string or recursive map string
-    type MapOfStringOrMapOfString = Map<string, StringOrMapOfString>; // map of StringOrMapOfString
+    type GarmentOrMapOfGarment = ValueOrMap<GarmentInformations>;  // string or recursive map string
+    type MapOfGarmentOrMapOfGarment = Map<string, RecursiveMapOf<GarmentInformations>>; // map of GarmentOrMapOfGarment
 
     /**
      *  garmentObjectToMap iterate recursively and convert object to map
      * @param garmentObject object garment
      * @returns recursive map of garments
      */
-    const garmentObjectToMap = (garmentObject: object): MapOfStringOrMapOfString => {
+    const garmentObjectToMap = (garmentObject: object): MapOfGarmentOrMapOfGarment => {
         const garmentMap = new Map();
         for (const parentValue of Object.entries(garmentObject)) {
             const key: string = parentValue[0];
-            const value: object | string = parentValue[1];
+            const value: object = parentValue[1];
+            console.log(typeof value)
 
             // leaf element
             if (typeof value === 'string') {
@@ -177,7 +179,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
      * @param value recursive map of garments
      * @returns recursive map of garments
      */
-    const newMapRoot = (key: string, value: MapOfStringOrMapOfString): MapOfStringOrMapOfString => {
+    const newMapRoot = (key: string, value: MapOfGarmentOrMapOfGarment): MapOfGarmentOrMapOfGarment => {
         return new Map().set(key, value)
     }
 
@@ -187,22 +189,22 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
      * @param closeOnSelect closes at the slightest interaction with the dropdown
      * @returns html dropdown element
      */
-    const garmentMapTreeToHtml = (garmentMap: MapOfStringOrMapOfString, closeOnSelect: boolean): JSX.Element => {
+    const garmentMapTreeToHtml = (garmentMap: MapOfGarmentOrMapOfGarment, closeOnSelect: boolean): JSX.Element => {
         const level = 0;
         // only one tree element
         const iterator = garmentMap.entries().next().value
         const key = iterator[0];
         const value = iterator[1];
-        return <Dropdown closeOnSelect={closeOnSelect}>
-            <Dropdown.Button flat color="secondary">
+        return <Dropdown closeOnSelect={closeOnSelect} key={`tree${key}`}>
+            <Dropdown.Button flat color="secondary" key={`treeButton${key}`}>
                 {key}
             </Dropdown.Button>
             <Dropdown.Menu
                 color="secondary"
                 aria-label="Actions"
                 css={{ $$dropdownMenuWidth: "280px" }}
+                key={`treeMenu${key}`}
             >
-                {/* < Dropdown.Section title={key}><Dropdown.Item >test</Dropdown.Item></Dropdown.Section> */}
                 {garmentMapBranchToHtml(value, level + 1)}
             </Dropdown.Menu>
         </Dropdown>
@@ -214,18 +216,21 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
      * @param level deepness of the garment tree
      * @returns array of html dropdown corresponding elements
      */
-    const garmentMapBranchToHtml = (branches: MapOfStringOrMapOfString, level: number): JSX.Element[] => {
+    const garmentMapBranchToHtml = (branches: MapOfGarmentOrMapOfGarment, level: number): JSX.Element[] => {
         return Array.from(branches).map(([key, value]) => {
-            // leaf
-            if (typeof value === 'string') return garmentMapLeafToHtml(value);
 
-            // new tree because dropdown supports only two levels
-            if (level % 2 === 0) {
-                return <Dropdown.Item >{garmentMapTreeToHtml(newMapRoot(key, value), true)}</Dropdown.Item>
-            }
-            // branch
-            else {
-                return < Dropdown.Section title={key}>{garmentMapBranchToHtml(value, level + 1)}</Dropdown.Section>
+            if (value instanceof Map) {
+                // new tree because dropdown supports only two levels
+                if (level % 2 === 0) {
+                    return <Dropdown.Item key={`leaf${key}`}>{garmentMapTreeToHtml(newMapRoot(key, value), true)}</Dropdown.Item>
+                }
+                // branch
+                else {
+                    return < Dropdown.Section title={key} key={`branch${key}`}>{garmentMapBranchToHtml(value, level + 1)}</Dropdown.Section>
+                }
+            } else {
+                // leaf
+                return garmentMapLeafToHtml(value as GarmentInformations);
             }
         })
     }
@@ -235,11 +240,12 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
      * @param leaf name of the leaf
      * @returns html dropdown item element
      */
-    const garmentMapLeafToHtml = (leaf: string): JSX.Element => {
-        return <Dropdown.Item>
+    const garmentMapLeafToHtml = (leaf: GarmentInformations): JSX.Element => {
+        return <Dropdown.Item key={`leaf${leaf}`}>
             <button
-                onClick={() => { requestUpdateTags(leaf) }}
+                onClick={() => { requestAddTags(leaf.name) }}
                 style={{ width: '100%', height: '100%', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                key={`leafButton${leaf}`}
             >
                 {leaf}
             </button>
@@ -284,7 +290,6 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             <Button auto onPress={requestCropCurrentImage} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP CURRENT IMAGE</Button>
             <Button auto onPress={requestCropNewImage} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP NEW IMAGE</Button>
             <Button auto onPress={requestCopyImage} css={{ marginLeft: "auto", marginRight: "auto" }} color="success">COPY IMAGE</Button>
-
         </>
     );
 }
