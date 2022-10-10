@@ -3,7 +3,7 @@ module.exports = {
         return [
             {
                 source: '/',
-                destination: '/imagesPending',
+                destination: '/pending',
                 permanent: true,
             },
         ]
