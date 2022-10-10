@@ -147,7 +147,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     type RecursiveMapOf<T> = Map<string, RecursiveMapOf<T>>  // recursive map type
     type ValueOrMap<T> = T | RecursiveMapOf<T>; // type or recursive map type
     type GarmentOrMapOfGarment = ValueOrMap<GarmentInformations>;  // string or recursive map string
-    type MapOfGarmentOrMapOfGarment = Map<string, RecursiveMapOf<GarmentInformations>>; // map of GarmentOrMapOfGarment
+    type MapOfGarmentOrMapOfGarment = Map<string, GarmentOrMapOfGarment>; // map of GarmentOrMapOfGarment
 
     /**
      *  garmentObjectToMap iterate recursively and convert object to map
@@ -162,7 +162,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             console.log(typeof value)
 
             // leaf element
-            if (typeof value === 'string') {
+            if (value.hasOwnProperty('name')) {
                 garmentMap.set(key, value);
             }
             // branch element
@@ -193,8 +193,8 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         const level = 0;
         // only one tree element
         const iterator = garmentMap.entries().next().value
-        const key = iterator[0];
-        const value = iterator[1];
+        const key: string = iterator[0];
+        const value: GarmentOrMapOfGarment = iterator[1];
         return <Dropdown closeOnSelect={closeOnSelect} key={`tree${key}`}>
             <Dropdown.Button flat color="secondary" key={`treeButton${key}`}>
                 {key}
@@ -205,7 +205,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                 css={{ $$dropdownMenuWidth: "280px" }}
                 key={`treeMenu${key}`}
             >
-                {garmentMapBranchToHtml(value, level + 1)}
+                {garmentMapBranchToHtml(value as MapOfGarmentOrMapOfGarment, level + 1)}
             </Dropdown.Menu>
         </Dropdown>
     }
@@ -218,19 +218,22 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
      */
     const garmentMapBranchToHtml = (branches: MapOfGarmentOrMapOfGarment, level: number): JSX.Element[] => {
         return Array.from(branches).map(([key, value]) => {
+            if (!value) return;
 
-            if (value instanceof Map) {
-                // new tree because dropdown supports only two levels
-                if (level % 2 === 0) {
-                    return <Dropdown.Item key={`leaf${key}`}>{garmentMapTreeToHtml(newMapRoot(key, value), true)}</Dropdown.Item>
-                }
-                // branch
-                else {
-                    return < Dropdown.Section title={key} key={`branch${key}`}>{garmentMapBranchToHtml(value, level + 1)}</Dropdown.Section>
-                }
-            } else {
+            console.log(value, value.hasOwnProperty('name'), level)
+            if (value.hasOwnProperty('name')) {
                 // leaf
                 return garmentMapLeafToHtml(value as GarmentInformations);
+            } else {
+                // new tree because dropdown supports only two levels
+                switch (level) {
+                    case 1:
+                        return < Dropdown.Section title={key} key={`branch${key}`}>{garmentMapBranchToHtml(value as MapOfGarmentOrMapOfGarment, level + 1)}</Dropdown.Section>
+                    case 2:
+                        return <Dropdown.Item key={`leaf${key}`} >{garmentMapTreeToHtml(newMapRoot(key, value as MapOfGarmentOrMapOfGarment), true)}</Dropdown.Item>
+                    default:
+                        return <>level not handled</>;
+                }
             }
         })
     }
@@ -241,13 +244,13 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
      * @returns html dropdown item element
      */
     const garmentMapLeafToHtml = (leaf: GarmentInformations): JSX.Element => {
-        return <Dropdown.Item key={`leaf${leaf}`}>
+        return <Dropdown.Item key={`leaf${leaf.name}`}>
             <button
                 onClick={() => { requestAddTags(leaf.name) }}
                 style={{ width: '100%', height: '100%', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                key={`leafButton${leaf}`}
+                key={`leafButton${leaf.name}`}
             >
-                {leaf}
+                {leaf.name}
             </button>
         </Dropdown.Item>
     }
