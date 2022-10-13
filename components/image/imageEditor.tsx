@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import { Button, Checkbox, Dropdown } from "@nextui-org/react";
 import { Api } from "@services/api";
 import { ImageSchema } from '@apiTypes/responseSchema';
 import { ImageCopySchema, ImageCropSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema";
 import { Garment, GarmentInformations } from "@apiTypes/garnment";
-import CanvasWrapper, { CanvasWrapperFunctions, CanvasWrapperProps } from "./canvasWrapper";
+import { CanvasWrapper, RectangleDimensions, RectangleInformations } from "./canvasWrapper";
 
 interface ImageEditorProps {
     api: Api,
@@ -13,25 +13,33 @@ interface ImageEditorProps {
     interactWithCanvas: boolean,
 }
 
+export interface CanvasWrapperState {
+    canvasDimensions: RectangleDimensions,
+    backgroundUrl: string,
+    selectedRectangleIndex: number,
+    showActiveRectangles: boolean,
+    activeRectangles: RectangleInformations[],
+    passiveRectangles: RectangleInformations[],
+    scaling: number,
+}
+export const CanvasWrapperContext = createContext<[CanvasWrapperState, (state: CanvasWrapperState) => void]>(null);
+
 export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
-    const canvasWrapperRef = useRef<CanvasWrapperFunctions>(null);
-    const [canvasWrapperProps, setCanvasWrapperProps] = useState<CanvasWrapperProps>({
-        backgroundUrl: '',
-        activeRectangles: [{
-            active: true,
-            name: "",
-            color: "rgb(0, 0, 200, 0.2)",
-            dimensions: { tlx: 100, tly: 100, width: 200, height: 200 },
-        }], // because showActiveRectangles is true at start
-        passiveRectangles: [],
-    });
-    const [showActiveRectangles, setShowActiveRectangles] = useState<boolean>(true);
     const garment = Garment;
+    const [canvasWrapperState, setCanvasWrapperState] = useState<CanvasWrapperState>({
+        canvasDimensions: { tlx: 0, tly: 0, width: 500, height: 500 },
+        backgroundUrl: '',
+        selectedRectangleIndex: 0,
+        showActiveRectangles: true,
+        activeRectangles: [],
+        passiveRectangles: [],
+        scaling: 1,
+    });
 
     useEffect(
         () => {
-            const newCanvasWrapperProps = canvasWrapperProps;
-            newCanvasWrapperProps.passiveRectangles = props.image.tags?.filter(tag => tag.origin.confidence).map(tag => {
+            const newState = { ...canvasWrapperState }  // to avoid implicit pointers
+            newState.passiveRectangles = props.image.tags?.filter(tag => tag.origin.confidence).map(tag => {
                 return {
                     active: false,
                     name: tag.name,
@@ -44,8 +52,15 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     }
                 }
             });
-            newCanvasWrapperProps.backgroundUrl = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}/${props.image.extension}`;
-            setCanvasWrapperProps(newCanvasWrapperProps);
+            newState.backgroundUrl = `${props.api.hostName()}/image/file/${props.image.origin}/${props.image.name}/${props.image.extension}`;
+            newState.activeRectangles = [{
+                active: true,
+                name: "",
+                color: "rgb(0, 0, 200, 0.2)",
+                dimensions: { tlx: 100, tly: 100, width: 200, height: 200 },
+            }];
+            newState.showActiveRectangles = true;
+            setCanvasWrapperState(newState);
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [props.image]
@@ -55,10 +70,12 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
      *  onCrop generate the body for a cropping request
      * @returns schema for croping and image
      */
-    const onCrop = (): ImageCropSchema => {
+    const onCrop = (): ImageCropSchema | undefined => {
+        const selectedRectangleDimensions = getSelectedRectangleDimensions();
 
-        const selectedRectangleDimensions = canvasWrapperRef.current?.getSelectedRectangleDimensions();
-        if (!selectedRectangleDimensions) return;
+        if (selectedRectangleDimensions.width !== selectedRectangleDimensions.height) {
+            alert('active box is not square'); return;
+        }
 
         const bodyImageCrop: ImageCropSchema = {
             id: props.image._id,
@@ -75,50 +92,85 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     /**
      *  requestCropCurrentImage update the size, tag boxes and file of the image in the backend
      */
-    const requestCropCurrentImage = () => {
+    const requestCropCurrentImage = async (): Promise<void> => {
         const body = onCrop();
         if (!body) return;
-        props.api.putImageCrop(body);  // update current image
+        await props.api.putImageCrop(body);  // update current image
         props.updateParent();
     }
 
     /**
      * requestCropNewImage creates a new image from this cropping in the backend
      */
-    const requestCropNewImage = () => {
+    const requestCropNewImage = async (): Promise<void> => {
         const body = onCrop();
         if (!body) return;
-        props.api.postImageCrop(body);  // create a new image
+        await props.api.postImageCrop(body);  // create a new image
         props.updateParent();
     }
 
     /**
      *  requestCopyImage copy the image in the backend
      */
-    const requestCopyImage = () => {
+    const requestCopyImage = async (): Promise<void> => {
         const body: ImageCopySchema = {
             origin: props.image.origin,
             originID: props.image.originID,
             name: props.image.name,
             extension: props.image.extension,
         };
-        props.api.copyImage(body);  // create a new image
+        await props.api.copyImage(body);  // create a new image
         props.updateParent();
+    }
+
+    /**
+    * getSelectedRectangleDimensions get the dimensions of the active rectangle
+    * @returns dimensions of the acrive rectangle
+    */
+    const getSelectedRectangleDimensions = (): RectangleDimensions => {
+        if (!canvasWrapperState.activeRectangles[canvasWrapperState.selectedRectangleIndex]) return null;
+        const selectedRectangleDimensions = canvasWrapperState.activeRectangles[canvasWrapperState.selectedRectangleIndex].dimensions;
+
+        // min size required
+        const minSizeForSelectedRectangle = 50;
+        if (selectedRectangleDimensions.width < minSizeForSelectedRectangle ||
+            selectedRectangleDimensions.height < minSizeForSelectedRectangle) return null;
+
+        // scale to original sizes
+        selectedRectangleDimensions.tlx /= canvasWrapperState.scaling;
+        selectedRectangleDimensions.tly /= canvasWrapperState.scaling;
+        selectedRectangleDimensions.width /= canvasWrapperState.scaling;
+        selectedRectangleDimensions.height /= canvasWrapperState.scaling;
+        return selectedRectangleDimensions;
     }
 
     /**
      *  requestAddTags add a tag to an image in the backend
      * @param tagName the name of the new tag
      */
-    const requestAddTags = async (tagName: string) => {
+    const requestAddTags = async (tagName: string): Promise<void> => {
         if (tagName === "") {
             alert('there is no tag name'); return;
         }
 
-        const selectedRectangleDimensions = canvasWrapperRef.current?.getSelectedRectangleDimensions();
+        const selectedRectangleDimensions = getSelectedRectangleDimensions();
         if (!selectedRectangleDimensions) {
             alert('no active rectange'); return;
         }
+
+        // const newCanvasWrapperState = canvasWrapperState;
+        // newCanvasWrapperState.passiveRectangles?.push({
+        //     active: false,
+        //     name: tagName,
+        //     color: 'black',
+        //     dimensions: {
+        //         tlx: selectedRectangleDimensions.tlx * canvasWrapperState.scaling,
+        //         tly: selectedRectangleDimensions.tly * canvasWrapperState.scaling,
+        //         width: selectedRectangleDimensions.width * canvasWrapperState.scaling,
+        //         height: selectedRectangleDimensions.height * canvasWrapperState.scaling,
+        //     }
+        // });
+        // setCanvasWrapperState(newCanvasWrapperState);
 
         const body: PutImageTagsPushSchema = {
             origin: props.image.origin,
@@ -140,8 +192,6 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
             }],
         }
         await props.api.putImageTagsPush(body);
-        alert(`tag '${tagName}' added`);
-        props.updateParent();
     }
 
     type RecursiveMapOf<T> = Map<string, RecursiveMapOf<T>>  // recursive map type
@@ -159,7 +209,6 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         for (const parentValue of Object.entries(garmentObject)) {
             const key: string = parentValue[0];
             const value: object = parentValue[1];
-            console.log(typeof value)
 
             // leaf element
             if (value.hasOwnProperty('name')) {
@@ -220,7 +269,6 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         return Array.from(branches).map(([key, value]) => {
             if (!value) return;
 
-            console.log(value, value.hasOwnProperty('name'), level)
             if (value.hasOwnProperty('name')) {
                 // leaf
                 return garmentMapLeafToHtml(value as GarmentInformations);
@@ -246,7 +294,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const garmentMapLeafToHtml = (leaf: GarmentInformations): JSX.Element => {
         return <Dropdown.Item key={`leaf${leaf.name}`}>
             <button
-                onClick={() => { requestAddTags(leaf.name) }}
+                onClick={async () => { await requestAddTags(leaf.name) }}
                 style={{ width: '100%', height: '100%', background: 'transparent', border: 'none', cursor: 'pointer' }}
                 key={`leafButton${leaf.name}`}
             >
@@ -255,44 +303,22 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         </Dropdown.Item>
     }
 
-    /**
-     *  onChangeShowActiveRectangles update the Canvas do show or hide the active rectangle
-     * @param isSelected show or hide the active rectangle
-     * @returns 
-     */
-    const onChangeShowActiveRectangles = (isSelected: boolean) => {
-        if (isSelected) {
-            const newCanvasWrapperProps = canvasWrapperProps;
-            newCanvasWrapperProps.activeRectangles = [{
-                active: true,
-                name: "",
-                color: "rgb(0, 0, 200, 0.2)",
-                dimensions: { tlx: 100, tly: 100, width: 200, height: 200 },
-            }];
-            setCanvasWrapperProps(newCanvasWrapperProps);
-        }
-        setShowActiveRectangles(isSelected);
-    }
-
     return (
         <>
             <div style={{ display: "grid", justifyContent: "center" }}>
-                {/** // TODO: child not rerendering when canvasWrapperProps changes */}
-                <CanvasWrapper
-                    ref={canvasWrapperRef}
-                    {...canvasWrapperProps}
-                ></CanvasWrapper>
 
-                <Checkbox defaultSelected={showActiveRectangles} onChange={onChangeShowActiveRectangles} >Show active boxes</Checkbox>
+                <CanvasWrapperContext.Provider value={[canvasWrapperState, setCanvasWrapperState]}>
+                    <CanvasWrapper />
+                </CanvasWrapperContext.Provider>
                 <br />
-                {showActiveRectangles && props.interactWithCanvas ?
+                {canvasWrapperState.showActiveRectangles && props.interactWithCanvas ?
                     garmentMapTreeToHtml(newMapRoot('garment', garmentObjectToMap(garment)), false) :
                     <></>}
                 <br />
             </div>
-            <Button auto onPress={requestCropCurrentImage} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP CURRENT IMAGE</Button>
-            <Button auto onPress={requestCropNewImage} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP NEW IMAGE</Button>
-            <Button auto onPress={requestCopyImage} css={{ marginLeft: "auto", marginRight: "auto" }} color="success">COPY IMAGE</Button>
+            <Button auto onPress={async ()=>{await requestCropCurrentImage()}} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP CURRENT IMAGE</Button>
+            <Button auto onPress={async ()=>{await requestCropNewImage()}} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP NEW IMAGE</Button>
+            <Button auto onPress={async ()=>{await requestCopyImage()}} css={{ marginLeft: "auto", marginRight: "auto" }} color="success">COPY IMAGE</Button>
         </>
     );
 }

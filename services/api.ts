@@ -1,6 +1,5 @@
 import { ImageSchema, TagSchema, UserSchema } from "@apiTypes/responseSchema";
 import { PostTagSchema, PostUserSchema, PostImageUnwantedSchema, PutImageTagsPushSchema, PutImageTagsPullSchema, ImageCropSchema, PostImageTransfer, ImageCopySchema } from "@apiTypes/requestSchema";
-
 export class Api {
 
     public static host = process.env.NEXT_PUBLIC_API_URL;
@@ -17,53 +16,69 @@ export class Api {
         return Api.host;
     }
 
-    private get = async (path: string): Promise<Response> => {
-        const requestOptions = {
-            method: 'GET',
-        }
-        return await fetch(`${Api.host}${path}`, requestOptions);
-    };
-
-    private post = async (path: string, body: string): Promise<Response> => {
-        const requestOptions = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body
-        };
-        return await fetch(`${Api.host}${path}`, requestOptions);
-    };
-
-    private put = async (path: string, body: string): Promise<Response> => {
-        const requestOptions = {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body
-        };
-        return await fetch(`${Api.host}${path}`, requestOptions);
-    };
-
-    private delete = async (path: string, body?: string): Promise<Response> => {
-        const requestOptions = {
-            method: 'DELETE',
-            headers: body ? {
-                'Content-Type': 'application/json'
-            } : {},
-            body
-        };
-        return await fetch(`${Api.host}${path}`, requestOptions);
-    };
-
-    private checkBadStatus = async (res: Response): Promise<void | Error> => {
-        if (res.status >= 300) {
-            const messages = ["Bad Request", "Server Error"];
-            const index = res.status >= 500;
-            throw new Error(`${messages[Number(index)]} ${res.status}! message: ${JSON.stringify(await res.json(), null, 2)}`);
-        }
+    private handleRequest = async (path: string, requestOptions): Promise<any> => {
+        const res = await fetch(`${Api.host}${path}`, requestOptions);
+        if (!res) throw new Error('no response');
+        const responseObject = await res.json();
+        if (!responseObject) return;
+        if (responseObject.status >= 300) throw new Error(`status: ${responseObject.status}, message: ${JSON.stringify(await responseObject, null, 2)}`);
+        return responseObject;
     }
+
+    private get = async (path: string): Promise<any> => {
+        try {
+            const requestOptions = {
+                method: 'GET',
+            };
+            return this.handleRequest(path, requestOptions);
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    private post = async (path: string, body: string): Promise<any> => {
+        try {
+            const requestOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body
+            };
+            return this.handleRequest(path, requestOptions);
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    private put = async (path: string, body: string): Promise<any> => {
+        try {
+            const requestOptions = {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body
+            };
+            return this.handleRequest(path, requestOptions);
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    private delete = async (path: string, body?: string): Promise<any> => {
+        try {
+            const requestOptions = {
+                method: 'DELETE',
+                headers: body ? {
+                    'Content-Type': 'application/json'
+                } : {},
+                body
+            };
+            return this.handleRequest(path, requestOptions);
+        } catch (err) {
+        }
+    };
 
     /** Routes for one image wanted and pending */
 
@@ -72,9 +87,7 @@ export class Api {
      */
     public getImageFile = async (origin: string, originID: string, extension: string): Promise<{ dataType: string, dataFile: string[] }> => {
         try {
-            const res = await this.get(`/image/file/${origin}/${originID}/${extension}`);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.get(`/image/file/${origin}/${originID}/${extension}`);
         } catch (err) {
             throw err;
         }
@@ -82,9 +95,7 @@ export class Api {
 
     public getImage = async (id: string, collection: string): Promise<ImageSchema> => {
         try {
-            const res = await this.get(`/image/${id}/${collection}`);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.get(`/image/${id}/${collection}`);
         } catch (err) {
             throw err;
         }
@@ -93,9 +104,7 @@ export class Api {
     public putImageTagsPush = async (body: PutImageTagsPushSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.put(`/image/tags/push`, str);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.put(`/image/tags/push`, str);
         } catch (err) {
             throw err;
         }
@@ -104,9 +113,7 @@ export class Api {
     public putImageTagsPull = async (body: PutImageTagsPullSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.put(`/image/tags/pull`, str);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.put(`/image/tags/pull`, str);
         } catch (err) {
             throw err;
         }
@@ -119,9 +126,7 @@ export class Api {
     public putImageCrop = async (body: ImageCropSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.put(`/image/crop`, str);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.put(`/image/crop`, str);
         } catch (err) {
             throw err;
         }
@@ -134,9 +139,7 @@ export class Api {
     public postImageCrop = async (body: ImageCropSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.post(`/image/crop`, str);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.post(`/image/crop`, str);
         } catch (err) {
             throw err;
         }
@@ -145,9 +148,7 @@ export class Api {
     public copyImage = async (body: ImageCopySchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.post(`/image/copy`, str);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.post(`/image/copy`, str);
         } catch (err) {
             throw err;
         }
@@ -156,9 +157,7 @@ export class Api {
     public postImageTransfer = async (body: PostImageTransfer): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.post(`/image/transfer`, str);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.post(`/image/transfer`, str);
         } catch (err) {
             throw err;
         }
@@ -166,9 +165,7 @@ export class Api {
 
     public deleteImage = async (id: string): Promise<any> => {
         try {
-            const res = await this.delete(`/image/${id}`);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.delete(`/image/${id}`);
         } catch (err) {
             throw err;
         }
@@ -178,9 +175,7 @@ export class Api {
 
     public getImageIds = async (origin: string, collection: string): Promise<ImageSchema[]> => {
         try {
-            const res = await this.get(`/images/id/${origin}/${collection}`);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.get(`/images/id/${origin}/${collection}`);
         } catch (err) {
             throw err;
         }
@@ -191,9 +186,7 @@ export class Api {
     public postImageUnwanted = async (body: PostImageUnwantedSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.post(`/image/unwanted`, str);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.post(`/image/unwanted`, str);
         } catch (err) {
             throw err
         }
@@ -202,9 +195,7 @@ export class Api {
 
     public deleteImageUnwanted = async (id: string): Promise<any> => {
         try {
-            const res = await this.delete(`/image/unwanted/${id}`);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.delete(`/image/unwanted/${id}`);
         } catch (err) {
             throw err;
         }
@@ -214,9 +205,7 @@ export class Api {
 
     public getImagesUnwanted = async (): Promise<ImageSchema[]> => {
         try {
-            const res = await this.get(`/images/unwanted`);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.get(`/images/unwanted`);
         } catch (err) {
             throw err;
         }
@@ -227,9 +216,7 @@ export class Api {
     public postTagWanted = async (body: PostTagSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.post(`/tag/wanted`, str);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.post(`/tag/wanted`, str);
         } catch (err) {
             throw err;
         }
@@ -238,9 +225,7 @@ export class Api {
     public postTagUnwanted = async (body: PostTagSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.post(`/tag/unwanted`, str);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.post(`/tag/unwanted`, str);
         } catch (err) {
             throw err
         }
@@ -249,9 +234,7 @@ export class Api {
 
     public deleteTagWanted = async (id: string): Promise<any> => {
         try {
-            const res = await this.delete(`/tag/wanted/${id}`);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.delete(`/tag/wanted/${id}`);
         } catch (err) {
             throw err;
         }
@@ -259,9 +242,7 @@ export class Api {
 
     public deleteTagUnwanted = async (id: string): Promise<any> => {
         try {
-            const res = await this.delete(`/tag/unwanted/${id}`);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.delete(`/tag/unwanted/${id}`);
         } catch (err) {
             throw err;
         }
@@ -271,9 +252,7 @@ export class Api {
 
     public getTagsWanted = async (): Promise<TagSchema[]> => {
         try {
-            const res = await this.get(`/tags/wanted`);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.get(`/tags/wanted`);
         } catch (err) {
             throw err;
         }
@@ -281,9 +260,7 @@ export class Api {
 
     public getTagsUnwanted = async (): Promise<TagSchema[]> => {
         try {
-            const res = await this.get(`/tags/unwanted`);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.get(`/tags/unwanted`);
         } catch (err) {
             throw err;
         }
@@ -294,9 +271,7 @@ export class Api {
     public postUserUnwanted = async (body: PostUserSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            const res = await this.post(`/user/unwanted`, str);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.post(`/user/unwanted`, str);
         } catch (err) {
             throw err
         }
@@ -305,9 +280,7 @@ export class Api {
 
     public deleteUserUnwanted = async (id: string): Promise<any> => {
         try {
-            const res = await this.delete(`/user/unwanted/${id}`);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.delete(`/user/unwanted/${id}`);
         } catch (err) {
             throw err;
         }
@@ -317,9 +290,7 @@ export class Api {
 
     public getUsersUnwanted = async (): Promise<UserSchema[]> => {
         try {
-            const res = await this.get(`/users/unwanted`);
-            await this.checkBadStatus(res);
-            return await res.json();
+            return await this.get(`/users/unwanted`);
         } catch (err) {
             throw err;
         }

@@ -1,20 +1,6 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-
-export interface CanvasWrapperProps {
-    backgroundUrl: string,
-    activeRectangles: RectangleInformations[],
-    passiveRectangles: RectangleInformations[],
-}
-
-interface CanvasWrapperState {
-    canvasDimensions: RectangleDimensions,
-    backgroundUrl: string,
-    backgroundImage: HTMLImageElement,
-    selectedRectangleIndex: number,
-    activeRectangles: RectangleInformations[],
-    passiveRectangles: RectangleInformations[],
-    scaling: number,
-}
+import { Checkbox } from "@nextui-org/react";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { CanvasWrapperContext } from "./imageEditor";
 
 export interface RectangleDimensions {
     tlx: number;
@@ -30,14 +16,10 @@ export interface RectangleInformations {
     dimensions: RectangleDimensions;
 }
 
-export interface CanvasWrapperFunctions {
-    getSelectedRectangleDimensions: () => RectangleDimensions;
-}
-
 /**
  *      -------------  x axis
  * 
- *      |   
+ *      |
  *       
  *      |
  * 
@@ -46,19 +28,13 @@ export interface CanvasWrapperFunctions {
  *         y axis
  */
 
-const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Ref<CanvasWrapperFunctions>) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+export const CanvasWrapper = () => {
     const maxCanvasSize = 500;
     const selectCircleRadius = 10;
-    const [state, setState] = useState<CanvasWrapperState>({
-        canvasDimensions: { tlx: 0, tly: 0, width: 500, height: 500 },
-        backgroundUrl: '',
-        backgroundImage: null,
-        selectedRectangleIndex: 0,
-        activeRectangles: [],
-        passiveRectangles: [],
-        scaling: 1,
-    })
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [state, _] = useContext(CanvasWrapperContext);
+    const [ctrlPressed, setCtrlPressed] = useState<boolean>(false);
+    const [backgroundImage, setBackgroundImage] = useState<HTMLImageElement>(null);
 
     let mouseX = [0, 0];    // index 0: current value, index 1: prev value
     let mouseY = [0, 0];    // index 0: current value, index 1: prev value
@@ -66,7 +42,6 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
     let dragBL = false;
     let dragTR = false;
     let dragBR = false;
-    let ctrlPressed = false;
 
     // component did mount
     useEffect(
@@ -80,24 +55,23 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
 
     useEffect(
         () => {
-            (
+            if (state.backgroundUrl) (
                 async () => {
-                    if (props.backgroundUrl && props.backgroundUrl.trim() !== state.backgroundUrl.trim()) await setImage();
+                    await setImage();
                 }
             )()
-        }
-        ,
+        },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [props]
+        [state.backgroundUrl]
     )
 
-    // handler of forwardRef
-    useImperativeHandle(
-        reference,
-        () => ({
-            getSelectedRectangleDimensions,
-        })
-    );
+    useEffect(
+        () => {
+            draw();
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [backgroundImage, state.showActiveRectangles, state.passiveRectangles]
+    )
 
     /**
     *  mouseDown overrides the mouseDown event and activates the desired parts of the active rectangle
@@ -164,9 +138,11 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
             state.activeRectangles[state.selectedRectangleIndex].dimensions.tlx += diffX;
             state.activeRectangles[state.selectedRectangleIndex].dimensions.tly += diffY;
             if (ctrlPressed) {
-                const scale = (diffX + diffY) / 2;
-                state.activeRectangles[state.selectedRectangleIndex].dimensions.width -= scale;
-                state.activeRectangles[state.selectedRectangleIndex].dimensions.height -= scale;
+                let scale = (Math.abs(diffX) + Math.abs(diffY)) / 2;
+                if (diffX > 0) scale = -scale;
+                if (diffY > 0) scale = -scale;
+                state.activeRectangles[state.selectedRectangleIndex].dimensions.width += scale;
+                state.activeRectangles[state.selectedRectangleIndex].dimensions.height += scale;
             } else {
                 state.activeRectangles[state.selectedRectangleIndex].dimensions.width -= diffX
                 state.activeRectangles[state.selectedRectangleIndex].dimensions.height -= diffY
@@ -176,9 +152,11 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
         else if (dragTR) {
             state.activeRectangles[state.selectedRectangleIndex].dimensions.tly += diffY;
             if (ctrlPressed) {
-                const scale = (diffX + diffY) / 2;
+                let scale = (Math.abs(diffX) + Math.abs(diffY)) / 2;
+                if (diffX < 0) scale = -scale;
+                if (diffY > 0) scale = -scale;
                 state.activeRectangles[state.selectedRectangleIndex].dimensions.width += scale;
-                state.activeRectangles[state.selectedRectangleIndex].dimensions.height -= scale;
+                state.activeRectangles[state.selectedRectangleIndex].dimensions.height += scale;
             } else {
                 state.activeRectangles[state.selectedRectangleIndex].dimensions.width += diffX
                 state.activeRectangles[state.selectedRectangleIndex].dimensions.height -= diffY
@@ -188,8 +166,10 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
         else if (dragBL) {
             state.activeRectangles[state.selectedRectangleIndex].dimensions.tlx += diffX;
             if (ctrlPressed) {
-                const scale = (diffX + diffY) / 2;
-                state.activeRectangles[state.selectedRectangleIndex].dimensions.width -= scale;
+                let scale = (Math.abs(diffX) + Math.abs(diffY)) / 2;
+                if (diffX > 0) scale = -scale;
+                if (diffY < 0) scale = -scale;
+                state.activeRectangles[state.selectedRectangleIndex].dimensions.width += scale;
                 state.activeRectangles[state.selectedRectangleIndex].dimensions.height += scale;
             } else {
                 state.activeRectangles[state.selectedRectangleIndex].dimensions.width -= diffX
@@ -216,7 +196,7 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
     * @param e mouse event of the canvas
     */
     const keyDown = (e: KeyboardEvent) => {
-        ctrlPressed = e.ctrlKey;
+        setCtrlPressed(e.ctrlKey);
         if (e.ctrlKey) {
             if (!state.activeRectangles[state.selectedRectangleIndex]) return;
             if (state.activeRectangles[state.selectedRectangleIndex].dimensions.width < state.activeRectangles[state.selectedRectangleIndex].dimensions.height) {
@@ -233,7 +213,7 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
     * @param e mouse event of the canvas
     */
     const keyUp = (e: KeyboardEvent) => {
-        ctrlPressed = e.ctrlKey;
+        setCtrlPressed(e.ctrlKey);
     }
 
     /**
@@ -242,7 +222,7 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
     * @param p2 coordinate on same axis as p1
     * @returns are the poits close enough
     */
-    const checkCloseEnough = (p1: number, p2: number) => {
+    const checkCloseEnough = (p1: number, p2: number): boolean => {
         return Math.abs(p1 - p2) < selectCircleRadius;
     }
 
@@ -282,7 +262,6 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
                     }
                 };
                 drawRectangleFill(context, informationRectangle);
-
                 informationRectangle.dimensions.tly += 15;
                 informationRectangle.dimensions.tlx += 5;
                 drawRectangleText(context, informationRectangle);
@@ -359,35 +338,14 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
     * @param context canvas context for drawing
     */
     const drawBackground = (context: CanvasRenderingContext2D) => {
-        if (state.backgroundImage) {
+        if (backgroundImage) {
             context.drawImage(
-                state.backgroundImage,
+                backgroundImage,
                 state.canvasDimensions.tlx,
                 state.canvasDimensions.tly,
                 state.canvasDimensions.width,
                 state.canvasDimensions.height);
         }
-    }
-
-    /**
-    * getSelectedRectangleDimensions get the dimensions of the active rectangle
-    * @returns dimensions of the acrive rectangle
-    */
-    const getSelectedRectangleDimensions = (): RectangleDimensions => {
-        if (!state.activeRectangles[state.selectedRectangleIndex]) return null;
-        const adaptedSelectedRectangleDimensions = adaptRectangleDimensionsToCanvas(state.activeRectangles[state.selectedRectangleIndex].dimensions);
-
-        // min size required
-        const minSizeForSelectedRectangle = 50;
-        if (adaptedSelectedRectangleDimensions.width < minSizeForSelectedRectangle ||
-            adaptedSelectedRectangleDimensions.height < minSizeForSelectedRectangle) return null;
-
-        // scale to original sizes
-        adaptedSelectedRectangleDimensions.tlx /= state.scaling;
-        adaptedSelectedRectangleDimensions.tly /= state.scaling;
-        adaptedSelectedRectangleDimensions.width /= state.scaling;
-        adaptedSelectedRectangleDimensions.height /= state.scaling;
-        return adaptedSelectedRectangleDimensions;
     }
 
     /**
@@ -411,43 +369,36 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
     * updateState updates the state when a new image is loaded
     * @param backgroundImage HTML image element
     */
-    const updateState = (backgroundImage: HTMLImageElement) => {
-        const newState = state;
-        newState.backgroundImage = backgroundImage;
-        newState.backgroundUrl = props.backgroundUrl;
-        newState.activeRectangles = props.activeRectangles;
-        newState.passiveRectangles = props.passiveRectangles;
-
-        newState.scaling = 1;
-        newState.scaling *= maxCanvasSize / backgroundImage.height;
-        newState.canvasDimensions = {
-            tlx: newState.canvasDimensions.tlx,
-            tly: newState.canvasDimensions.tly,
-            width: backgroundImage.width * newState.scaling,
-            height: backgroundImage.height * newState.scaling,
+    const updateStateAfterLoadedBackground = (backgroundImage: HTMLImageElement) => {
+        setBackgroundImage(backgroundImage);
+        state.scaling = 1;
+        state.scaling *= maxCanvasSize / backgroundImage.height;
+        state.canvasDimensions = {
+            tlx: state.canvasDimensions.tlx,
+            tly: state.canvasDimensions.tly,
+            width: backgroundImage.width * state.scaling,
+            height: backgroundImage.height * state.scaling,
         };
-        canvasRef.current.width = newState.canvasDimensions.width;
-        canvasRef.current.height = newState.canvasDimensions.height;
+        canvasRef.current.width = state.canvasDimensions.width;
+        canvasRef.current.height = state.canvasDimensions.height;
 
-        newState.passiveRectangles?.forEach((rectangle) => {
-            rectangle.dimensions.tlx *= newState.scaling;
-            rectangle.dimensions.tly *= newState.scaling;
-            rectangle.dimensions.width *= newState.scaling;
-            rectangle.dimensions.height *= newState.scaling;
+        state.passiveRectangles?.forEach((rectangle) => {
+            rectangle.dimensions.tlx *= state.scaling;
+            rectangle.dimensions.tly *= state.scaling;
+            rectangle.dimensions.width *= state.scaling;
+            rectangle.dimensions.height *= state.scaling;
         });
-        setState(newState);
-        draw();
     }
 
     /**
     * setImage load the background image and update the state
     */
-    const setImage = async () => {
+    const setImage = async (): Promise<void> => {
         try {
-            const backgroundImage = await loadBackground(props.backgroundUrl)
-            updateState(backgroundImage);
+            const backgroundImage = await loadBackground(state.backgroundUrl)
+            updateStateAfterLoadedBackground(backgroundImage);
         } catch (error) {
-            console.error(`setImage error: ${props.backgroundUrl}`, error)
+            console.error(`setImage error: ${state.backgroundUrl}`, error)
         }
     }
 
@@ -467,7 +418,29 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
         return rectangleDimensions;
     }
 
+    /**
+     *  onChangeShowActiveRectangles update the Canvas do show or hide the active rectangle
+     * @param isSelected show or hide the active rectangle
+     * @returns 
+     */
+     const onChangeShowActiveRectangles = (isSelected: boolean) => {
+        if (isSelected) {
+            state.activeRectangles = [{
+                active: true,
+                name: "",
+                color: "rgb(0, 0, 200, 0.2)",
+                dimensions: { tlx: 100, tly: 100, width: 200, height: 200 },
+            }];
+            state.showActiveRectangles = isSelected;
+        } else {
+            state.activeRectangles = [];    // no more active rectangle
+            state.showActiveRectangles = isSelected;
+        }
+        draw();
+    }
+
     return (
+        <>
         <canvas
             ref={canvasRef}
             width={state.canvasDimensions.width}
@@ -476,8 +449,7 @@ const CanvasWrapper = forwardRef((props: CanvasWrapperProps, reference: React.Re
             onMouseUp={mouseUp}
             onMouseMove={mouseMove}
         />
+        <Checkbox defaultSelected={state.showActiveRectangles} onChange={onChangeShowActiveRectangles} >Show active boxes</Checkbox>
+        </>
     )
-});
-
-CanvasWrapper.displayName = 'CanvasWrapper';
-export default CanvasWrapper
+}
