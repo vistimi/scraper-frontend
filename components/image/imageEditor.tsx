@@ -1,9 +1,9 @@
 import React, { createContext, useEffect, useState } from "react";
-import { Button, Checkbox, Dropdown } from "@nextui-org/react";
+import { Button, Dropdown } from "@nextui-org/react";
 import { Api } from "@services/api";
-import { ImageSchema } from '@apiTypes/responseSchema';
-import { ImageCopySchema, ImageCropSchema, PutImageTagsPushSchema } from "@apiTypes/requestSchema";
-import { Garment, GarmentInformations } from "@apiTypes/garnment";
+import { ImageSchema } from 'schemas/responseSchema';
+import { ImageCopySchema, ImageCropSchema, PutImageTagsPushSchema } from "schemas/requestSchema";
+import { Garment, GarmentInformations } from "schemas/garnment";
 import { CanvasWrapper, RectangleDimensions, RectangleInformations } from "./canvasWrapper";
 
 interface ImageEditorProps {

@@ -70,7 +70,7 @@ export const CanvasWrapper = () => {
             draw();
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [backgroundImage, state.showActiveRectangles, state.passiveRectangles]
+        [backgroundImage, state.showActiveRectangles]
     )
 
     /**

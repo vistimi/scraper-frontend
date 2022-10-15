@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { getSession } from "next-auth/react"
 import { Api } from "@services/api";
 import { Button, Table } from '@nextui-org/react';
-import { ImageSchema } from '@apiTypes/responseSchema';
+import { ImageSchema } from 'schemas/responseSchema';
 import { NavBar } from '@components/global/navBar';
 
-export default function ImagesUnwanted() {
+export default function Undesired() {
     const api: Api = new Api();
     const [imagesUnwanted, setImagesUnwanted] = useState<ImageSchema[]>([]);
     const [modal, setModal] = useState<{ display: boolean, message: string }>({ display: false, message: "" });
