@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { getSession } from "next-auth/react"
 import { Api } from "@services/api";
 import { Button, Table, Input } from '@nextui-org/react';
-import { TagSchema } from '@apiTypes/responseSchema';
-import { PostTagSchema } from '@apiTypes/requestSchema';
+import { TagSchema } from 'schemas/responseSchema';
+import { PostTagSchema } from 'schemas/requestSchema';
 import { ModalError } from '@components/global/modal';
 import { NavBar } from '@components/global/navBar';
 

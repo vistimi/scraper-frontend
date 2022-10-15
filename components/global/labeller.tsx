@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Api } from "@services/api";
 import { Button, Collapse, Pagination, Table } from '@nextui-org/react';
-import { ImageSchema } from '@apiTypes/responseSchema';
-import { PostImageTransfer, PostImageUnwantedSchema, PostTagSchema, PostUserSchema, PutImageTagsPullSchema } from '@apiTypes/requestSchema';
+import { ImageSchema } from 'schemas/responseSchema';
+import { PostImageTransfer, PostImageUnwantedSchema, PostTagSchema, PostUserSchema, PutImageTagsPullSchema } from 'schemas/requestSchema';
 import { ImageEditor } from '@components/image/imageEditor';
 import { NavBar } from '@components/global/navBar';
 
@@ -158,7 +158,7 @@ export const Labeller = (props: LabellerProps): JSX.Element => {
     return (
         <>
             <NavBar />
-            <br />
+            
             {/* Image origin */}
             <Button.Group>
                 <Button auto onPress={async () => { await getIDs("flickr") }}>Flickr</Button>

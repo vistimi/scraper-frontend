@@ -2,7 +2,12 @@ import React, { Component } from "react";
 import Head from "next/head";
 import { scrollbar } from "@components/global/scrollbar";
 import { NextUIProvider } from '@nextui-org/react';
+import { SessionProvider } from "next-auth/react"
+import type { AppProps } from "next/app"
+import { Session } from "next-auth";
 
+// Use the <SessionProvider> to improve performance and allow components that call
+// `useSession()` anywhere in your application to access the `session` object.
 const App = ({ Component, pageProps }) => {
     return (
         <>
@@ -11,8 +16,14 @@ const App = ({ Component, pageProps }) => {
                     <title>{Component.title}</title>
                     <meta property="og:title" content={Component.title} key="title" />
                 </Head>
-                
-                <Component {...pageProps} />
+
+                <SessionProvider
+                    // Provider options are not required but can be useful in situations where
+                    // you have a short session maxAge time. Shown here with default values.
+                    session={pageProps.session}
+                >
+                    <Component {...pageProps} />
+                </SessionProvider>
 
                 <style jsx global>{`
                         ${scrollbar}

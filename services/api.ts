@@ -1,5 +1,5 @@
-import { ImageSchema, TagSchema, UserSchema } from "@apiTypes/responseSchema";
-import { PostTagSchema, PostUserSchema, PostImageUnwantedSchema, PutImageTagsPushSchema, PutImageTagsPullSchema, ImageCropSchema, PostImageTransfer, ImageCopySchema } from "@apiTypes/requestSchema";
+import { ImageSchema, TagSchema, UserSchema } from "schemas/responseSchema";
+import { PostTagSchema, PostUserSchema, PostImageUnwantedSchema, PutImageTagsPushSchema, PutImageTagsPullSchema, ImageCropSchema, PostImageTransfer, ImageCopySchema } from "schemas/requestSchema";
 export class Api {
 
     public static host = process.env.NEXT_PUBLIC_API_URL;

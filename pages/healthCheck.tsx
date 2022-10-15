@@ -1,5 +1,3 @@
-import React from 'react';
-
-export default function Users() {
+export default function HealthCheckNext() {
     return <>ok</>;
 }
