@@ -43,7 +43,7 @@ packages:
     sudo docker run -it -p 3000:3000 --rm --name dataset-gui-run dataset-gui-img
 ## .env
 
-Declare the type of each env variable inside types/environment.d.ts
+Declare the type of each `.env` variables inside types/environment.d.ts
 
     NEXT_PUBLIC_API_URL=http://localhost:8080
     NEXTAUTH_URL=http://localhost:3000

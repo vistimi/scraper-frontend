@@ -1,0 +1,228 @@
+name: CI/CD
+
+# only on trunk branch use secrets
+on:
+  workflow_dispatch:
+    inputs:
+      aws-account-id:
+        description: "AWS Account ID"
+        required: true
+        type: string
+      aws-region:
+        description: "AWS Region to launch the instance"
+        required: true
+        type: string
+      common-name:
+        description: "The name used acrross many resources, usually account-region-project-repo-branch"
+        required: true
+        type: string
+      backend-dns:
+        description: "The adress of the backend, e.g. http://localhost:8080"
+        required: true
+        type: string
+      task-desired-count:
+        description: "The number of tasks to run in the service"
+        required: true
+        type: string
+
+env:
+  AWS_ACCOUNT_ID: ${{ inputs.aws-account-id }}
+  AWS_REGION: ${{ inputs.aws-region }}
+  COMMON_NAME: ${{ inputs.common-name }}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.8.0
+      - run: npm ci
+      - run: npm run build
+
+  s3-env:
+    name: S3 env
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.aws-account-name }}
+    env:
+      BACKEND_DNS: ${{ inputs. backend-dns }}
+      BUCKET_ENV: ${{ inputs.common-name }}-env
+      ENV_FILE_NAME: ".env"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Display non-sensitive variables
+        run: |
+          printf " \
+          ENV_FILE_NAME = $ENV_FILE_NAME\n \
+          BACKEND_DNS = $BACKEND_DNS\n \
+          IMAGES_BUCKET = $BUCKET_ENV\n \
+          AWS_REGION = $AWS_REGION\n \
+          "
+
+      - name: setup AWS CLI
+        run: |
+          aws --version
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region $AWS_REGION
+
+      - name: Upload env file
+        run: |
+          cat <<EOF > .env
+          NEXT_PUBLIC_API_URL=$BACKEND_DNS
+          EOF
+          aws s3 cp .env s3://$BUCKET_ENV/$ENV_FILE_NAME
+
+  ecr:
+    name: ECR
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.aws-account-name }}
+    env:
+      AWS_CLI_SERVICE: ecr
+      DOCKER_FOLDER_PATH: ""
+      ECR_REPOSITORY: ${{ inputs.common-name }}
+    # needs: [build]
+    outputs:
+      IMAGE_TAG: ${{ steps.build-image.outputs.IMAGE_TAG }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Display non-sensitive variables
+        run: |
+          printf " \
+          AWS_CLI_SERVICE = $AWS_CLI_SERVICE\n \
+          AWS_ACCOUNT_ID = $AWS_ACCOUNT_ID\n \
+          AWS_REGION = $AWS_REGION\n \
+          DOCKER_FOLDER_PATH = $DOCKER_FOLDER_PATH\n \
+          ECR_REPOSITORY = $ECR_REPOSITORY\n \
+          "
+
+      - name: setup AWS CLI
+        run: |
+          aws --version
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region $AWS_REGION
+
+      - name: login to ECR
+        run: |
+          if [[ $AWS_CLI_SERVICE == ecr ]]; then
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+          elif [[ $AWS_CLI_SERVICE == ecr-public ]]; then
+            aws ecr-public get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin public.ecr.aws
+          fi
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          IMAGE_TAG: "latest"
+        run: |
+          export ECR_URI=$(aws $AWS_CLI_SERVICE describe-repositories --repository-names $ECR_REPOSITORY --output text --query "repositories[].[repositoryUri]")
+          echo "ECR_URI= $ECR_URI"
+          docker build ${GITHUB_WORKSPACE}/$DOCKER_FOLDER_PATH -t $ECR_URI/$IMAGE_TAG
+          docker tag $(docker images -q $ECR_URI/$IMAGE_TAG) $ECR_URI:$IMAGE_TAG
+          docker push $ECR_URI:$IMAGE_TAG
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+  ecs:
+    name: ECS
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.aws-account-name }}
+    needs: [ecr, s3-env]
+    env:
+      IMAGE_TAG: ${{ needs.ecr.outputs.IMAGE_TAG }}
+      DESIRED_COUNT: ${{ inputs.task-desired-count }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Display variables
+        run: |
+          printf " \
+          AWS_REGION = $AWS_REGION\n \
+          IMAGE_TAG = $IMAGE_TAG\n \
+          "
+
+      - name: setup AWS CLI
+        run: |
+          aws --version
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region $AWS_REGION
+
+      - name: create json task definition
+        run: |
+          TASK_DEFINITION=$(aws ecs describe-task-definition \
+            --task-definition $COMMON_NAME \
+            --query 'taskDefinition' \
+            --output json)
+          cat << EOF > task_definition.json
+          {
+            "containerDefinitions": $(jq  '.containerDefinitions' <<< $TASK_DEFINITION),
+            "executionRoleArn": $(jq  '.executionRoleArn' <<< $TASK_DEFINITION),
+            "taskRoleArn": $(jq  '.taskRoleArn' <<< $TASK_DEFINITION),
+            "family": $(jq  '.family' <<< $TASK_DEFINITION),
+            "requiresCompatibilities": $(jq  '.requiresCompatibilities' <<< $TASK_DEFINITION),
+            "memory": $(jq  '.memory' <<< $TASK_DEFINITION),
+            "cpu": $(jq  '.cpu' <<< $TASK_DEFINITION)
+          }
+          EOF
+          cat task_definition.json
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task_definition.json
+          container-name: ${{ inputs.common-name }}
+          image: ${{ needs.ecr.outputs.IMAGE_TAG }}
+
+      - name: Update service
+        run: |
+          LATEST_TASK_ARN=$(aws ecs list-task-definitions \
+            --region $AWS_REGION \
+            --family-prefix $COMMON_NAME \
+            --sort DESC \
+            --query 'taskDefinitionArns[0]' \
+            --output text)
+          aws ecs update-service \
+            --cluster $COMMON_NAME \
+            --service $COMMON_NAME \
+            --force-new-deployment \
+            --region $AWS_REGION \
+            --task-definition $LATEST_TASK_ARN \
+            --desired-count $DESIRED_COUNT \
+            --output json
+
+      - name: Wait for tasks
+        run: |
+          sleep 30
+          TASKS=$(aws ecs list-tasks \
+          --region $AWS_REGION \
+          --cluster $COMMON_NAME \
+          --query 'taskArns[]' \
+          --output text)
+          echo $TASKS
+          for task in $TASKS; do
+              taskStatus=$(aws ecs describe-tasks --region $AWS_REGION --cluster $COMMON_NAME --tasks $task --query 'tasks[].[lastStatus]' --output text)
+              while [ $taskStatus != "RUNNING" ]
+               do
+                echo "Waiting for task $task to be RUNNING, currently $taskStatus"
+                sleep 5s
+                taskStatus=$(aws ecs describe-tasks --region $AWS_REGION --cluster $COMMON_NAME --tasks $task --query 'tasks[].[lastStatus]' --output text)
+                echo $taskStatus
+                if [[ $taskStatus  =~ "error" ]]; then exit 1; fi
+              done
+          done
