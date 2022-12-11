@@ -89,7 +89,7 @@ jobs:
       AWS_CLI_SERVICE: ecr
       DOCKER_FOLDER_PATH: ""
       ECR_REPOSITORY: ${{ inputs.common-name }}
-    # needs: [build]
+    needs: [build]
     outputs:
       IMAGE_TAG: ${{ steps.build-image.outputs.IMAGE_TAG }}
 
