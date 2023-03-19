@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { getSession } from "next-auth/react"
 import { Api } from "@services/api";
 import { Button, Table } from '@nextui-org/react';
-import { ImageSchema } from 'schemas/responseSchema';
+import { PictureSchema } from 'schemas/responseSchema';
 import { NavBar } from '@components/global/navBar';
 
 export default function Undesired() {
     const api: Api = new Api();
-    const [imagesUnwanted, setImagesUnwanted] = useState<ImageSchema[]>([]);
+    const [imagesUnwanted, setImagesUnwanted] = useState<PictureSchema[]>([]);
     const [modal, setModal] = useState<{ display: boolean, message: string }>({ display: false, message: "" });
 
     useEffect(() => {
@@ -33,9 +33,10 @@ export default function Undesired() {
     }
 
 
-    const deleteImageUnwanted = async (id: string) => {
+    const deleteImageUnwanted = async (origin: string, id: string) => {
         try {
-            await api.deleteImageUnwanted(id);
+            const body = {origin, id}
+            await api.deleteImageUnwanted(body);
             await loadImagesUnwanted();
         } catch (error) {
             setModal({ display: true, message: `${error}` });
@@ -63,12 +64,12 @@ export default function Undesired() {
                 </Table.Header>
                 <Table.Body>
                     {imagesUnwanted.map(image =>
-                        <Table.Row key={image._id}>
-                            <Table.Cell>{image._id}</Table.Cell>
+                        <Table.Row key={image.id}>
+                            <Table.Cell>{image.id}</Table.Cell>
                             <Table.Cell>{image.origin}</Table.Cell>
                             <Table.Cell>{image.originID}</Table.Cell>
                             <Table.Cell>{image.creationDate.toDateString()}</Table.Cell>
-                            <Table.Cell><Button color="error" onPress={() => { deleteImageUnwanted(image._id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
+                            <Table.Cell><Button color="error" onPress={() => { deleteImageUnwanted(image.origin, image.id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>
             </Table> :

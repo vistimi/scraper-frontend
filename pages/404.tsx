@@ -6,6 +6,7 @@ export default function FourZeroFour() {
         <>
             <NavBar />
             <Header />
+            404 Not found
         </>
     );
 }

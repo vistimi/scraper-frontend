@@ -41,6 +41,13 @@ packages:
 
     sudo docker build -t dataset-gui-img .
     sudo docker run -it -p 3000:3000 --rm --name dataset-gui-run dataset-gui-img
+
+#### Backend with Docker
+```shell
+docker build -t scraper-frontend .
+docker run --rm -it --net scraper-net  -p 3000:3000 --name scraper-run --env-file <state>.env scraper-frontend
+```
+
 ## .env
 
 Declare the type of each `.env` variables inside types/environment.d.ts

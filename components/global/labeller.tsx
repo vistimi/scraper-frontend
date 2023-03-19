@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Api } from "@services/api";
 import { Button, Collapse, Pagination, Table } from '@nextui-org/react';
-import { ImageSchema } from 'schemas/responseSchema';
-import { PostImageTransfer, PostImageUnwantedSchema, PostTagSchema, PostUserSchema, PutImageTagsPullSchema } from 'schemas/requestSchema';
+import { PictureSchema, TagSchema, UserSchema } from 'schemas/responseSchema';
+import { DeleteImageTagSchema, PostImageTransfer, PostImageUnwantedSchema } from 'schemas/requestSchema';
 import { ImageEditor } from '@components/image/imageEditor';
 import { NavBar } from '@components/global/navBar';
 
@@ -17,7 +17,7 @@ export const Labeller = (props: LabellerProps): JSX.Element => {
     const collection: string = props.transferFrom;
 
     const [ids, setIds] = useState<string[]>([]);
-    const [image, setImage] = useState<ImageSchema>(null);
+    const [image, setImage] = useState<PictureSchema>(null);
     const [modal, setModal] = useState<{ display: boolean, message: string }>({ display: false, message: "" });
     const [origin, setOrigin] = useState<string>("flickr");
     const [page, setPage] = useState<number>(1);
@@ -42,7 +42,7 @@ export const Labeller = (props: LabellerProps): JSX.Element => {
     const getIDs = async (origin: string) => {
         const ids = await api.getImageIds(origin, collection);
         if (ids?.length) {
-            setIds(ids.map(tag => tag._id));
+            setIds(ids.map(tag => tag.id));
             setOrigin(origin);
         } else {
             setModal({ display: true, message: `${origin} is empty` });
@@ -52,11 +52,11 @@ export const Labeller = (props: LabellerProps): JSX.Element => {
     const imageFromPage = async (page: number) => {
         try {
             if (ids?.length) {
-                const image = await api.getImage(ids[page - 1], collection);
+                const image = await api.getImage(origin, ids[page - 1], collection);
                 image.creationDate = new Date(image.creationDate);
                 image.tags?.forEach(tag => tag.creationDate = new Date(tag.creationDate));
-                image.size?.forEach(size => size.creationDate = new Date(size.creationDate));
-                image.size?.sort((a, b) => Number(b.creationDate) - Number(a.creationDate)); // most recent date first
+                image.sizes?.forEach(size => size.creationDate = new Date(size.creationDate));
+                image.sizes?.sort((a, b) => Number(b.creationDate) - Number(a.creationDate)); // most recent date first
                 setImage(image)
             }
         } catch (error) {
@@ -65,11 +65,9 @@ export const Labeller = (props: LabellerProps): JSX.Element => {
     };
 
     const postTagUnwanted = async (name: string) => {
-        const body: PostTagSchema = {
+        const body: TagSchema = {
             name: name,
-            origin: {
-                "name": "gui",
-            }
+            originName: "gui"
         }
         try {
             await api.postTagUnwanted(body);
@@ -80,11 +78,9 @@ export const Labeller = (props: LabellerProps): JSX.Element => {
     }
 
     const postTagWanted = async (name: string) => {
-        const body: PostTagSchema = {
+        const body: TagSchema = {
             name: name,
-            origin: {
-                "name": "gui",
-            }
+            originName: "gui"
         }
         try {
             await api.postTagWanted(body);
@@ -94,7 +90,7 @@ export const Labeller = (props: LabellerProps): JSX.Element => {
     }
 
     const postUserUnwanted = async () => {
-        const body: PostUserSchema = {
+        const body: UserSchema = {
             origin: origin,
             name: image.user.name,
             originID: image.user.originID,
@@ -109,30 +105,29 @@ export const Labeller = (props: LabellerProps): JSX.Element => {
 
     const postImageUnwanted = async () => {
         const bodyPostImageUnwantedSchema: PostImageUnwantedSchema = {
-            _id: image._id,
             origin: origin,
-            originID: image.originID,
+            id: image.id,
         }
         await api.postImageUnwanted(bodyPostImageUnwantedSchema);   // insert unwanted image
-        await api.deleteImage(image._id);   // delete pending image
+        await api.deleteImage(image.origin, image.id, image.name);   // delete pending image
         setPage(page - 1);
         await getIDs(origin);
     };
 
     const deleteImage = async () => {
-        await api.deleteImage(image._id);   // delete pending image
+        await api.deleteImage(image.origin, image.id, image.name);   // delete pending image
         setPage(page - 1);
         await getIDs(origin);
     };
 
-    const putImageTagsPull = async (name: string) => {
-        const body: PutImageTagsPullSchema = {
-            id: image._id,
+    const deleteImageTag = async (id: string) => {
+        const body: DeleteImageTagSchema = {
+            id: image.id,
             origin: image.origin,
-            names: [name],
+            tagID: id,
         }
         try {
-            await api.putImageTagsPull(body);
+            await api.deleteImageTag(body);
             await imageFromPage(page);
         } catch (error) {
             setModal({ display: true, message: `${error}` });
@@ -142,7 +137,8 @@ export const Labeller = (props: LabellerProps): JSX.Element => {
 
     const postImageTransfer = async () => {
         const body: PostImageTransfer = {
-            originID: image.originID,
+            origin: image.origin,
+            id: image.id,
             from: collection,
             to: props.transferTo,
         }
@@ -199,14 +195,14 @@ export const Labeller = (props: LabellerProps): JSX.Element => {
                                         <Table.Column>REMOVE</Table.Column>
                                     </Table.Header>
                                     <Table.Body>
-                                        {image.tags.filter(tag => !!tag.origin.confidence).map((tag, i) =>
+                                        {image.tags.filter(tag => !!tag.boxInformation?.confidence).map((tag, i) =>
                                             <Table.Row key={i}>
                                                 <Table.Cell>{tag.name}</Table.Cell>
-                                                <Table.Cell>{tag.origin.name}</Table.Cell>
+                                                <Table.Cell>{tag.originName}</Table.Cell>
                                                 <Table.Cell>{tag.creationDate.toDateString()}</Table.Cell>
                                                 <Table.Cell><Button color="error" onPress={() => { postTagUnwanted(tag.name) }} auto css={{ color: "black" }}>UNWANTED TAG</Button></Table.Cell>
                                                 <Table.Cell><Button color="success" onPress={() => { postTagWanted(tag.name) }} auto css={{ color: "black" }}>WANTED TAG</Button></Table.Cell>
-                                                <Table.Cell><Button color="warning" onPress={() => { putImageTagsPull(tag.name) }} auto css={{ color: "black" }}>REMOVE TAG</Button></Table.Cell>
+                                                <Table.Cell><Button color="warning" onPress={() => { deleteImageTag(tag.id) }} auto css={{ color: "black" }}>REMOVE TAG</Button></Table.Cell>
                                             </Table.Row>)}
                                     </Table.Body>
                                 </Table>
@@ -226,10 +222,10 @@ export const Labeller = (props: LabellerProps): JSX.Element => {
                                         <Table.Column>CREATION</Table.Column>
                                     </Table.Header>
                                     <Table.Body>
-                                        {image.tags.filter(tag => !tag.origin.confidence).map((tag, i) =>
+                                        {image.tags.filter(tag => !tag.boxInformation?.confidence).map((tag, i) =>
                                             <Table.Row key={i}>
                                                 <Table.Cell>{tag.name}</Table.Cell>
-                                                <Table.Cell>{tag.origin.name}</Table.Cell>
+                                                <Table.Cell>{tag.originName}</Table.Cell>
                                                 <Table.Cell>{tag.creationDate.toDateString()}</Table.Cell>
                                             </Table.Row>)}
                                     </Table.Body>
@@ -242,10 +238,10 @@ export const Labeller = (props: LabellerProps): JSX.Element => {
                     {
                         props.editImages ?
                             <>
-                                <div>_id: {image._id}</div>
+                                <div>_id: {image.id}</div>
                                 <div>originID: {image.originID}</div>
-                                <div>width: {image.size[0].box.width}</div>
-                                <div>height: {image.size[0].box.height}</div>
+                                <div>width: {image.sizes[0].box.width}</div>
+                                <div>height: {image.sizes[0].box.height}</div>
                                 <div>extension: {image.extension}</div>
                                 <div>name: {image.name}</div>
                                 <div>license: {image.license}</div>

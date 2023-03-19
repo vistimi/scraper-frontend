@@ -1,5 +1,5 @@
-import { ImageSchema, TagSchema, UserSchema } from "schemas/responseSchema";
-import { PostTagSchema, PostUserSchema, PostImageUnwantedSchema, PutImageTagsPushSchema, PutImageTagsPullSchema, ImageCropSchema, PostImageTransfer, ImageCopySchema } from "schemas/requestSchema";
+import { PictureSchema, TagSchema, UserSchema } from "schemas/responseSchema";
+import { PostImageUnwantedSchema, PostImageTransfer, ImageCopySchema, DeleteImageTagSchema, PutImageTagSchema, PutImageCropSchema, PostImageCropSchema, DeleteImageUnwantedSchema } from "schemas/requestSchema";
 export class Api {
 
     public static host = process.env.NEXT_PUBLIC_API_URL;
@@ -85,35 +85,35 @@ export class Api {
     /**
      * getImageFile fetch the image file
      */
-    public getImageFile = async (origin: string, originID: string, extension: string): Promise<{ dataType: string, dataFile: string[] }> => {
+    public getImageFile = async (origin: string, name: string, extension: string): Promise<{ dataType: string, dataFile: string[] }> => {
         try {
-            return await this.get(`/image/file/${origin}/${originID}/${extension}`);
+            return await this.get(`/image/file/${origin}/${name}/${extension}`);
         } catch (err) {
             throw err;
         }
     };
 
-    public getImage = async (id: string, collection: string): Promise<ImageSchema> => {
+    public getImage = async (origin: string, id: string, collection: string): Promise<PictureSchema> => {
         try {
-            return await this.get(`/image/${id}/${collection}`);
+            return await this.get(`/image/${origin}/${id}/${collection}`);
         } catch (err) {
             throw err;
         }
     };
 
-    public putImageTagsPush = async (body: PutImageTagsPushSchema): Promise<any> => {
+    public putImageTag = async (body: PutImageTagSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            return await this.put(`/image/tags/push`, str);
+            return await this.put(`/image/tag`, str);
         } catch (err) {
             throw err;
         }
     };
 
-    public putImageTagsPull = async (body: PutImageTagsPullSchema): Promise<any> => {
+    public deleteImageTag = async (body: DeleteImageTagSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
-            return await this.put(`/image/tags/pull`, str);
+            return await this.put(`/image/tag`, str);
         } catch (err) {
             throw err;
         }
@@ -123,7 +123,7 @@ export class Api {
      * putImageCrop update the size, tag boxes and file of a pending image
      * @param body ImageCropSchema
      */
-    public putImageCrop = async (body: ImageCropSchema): Promise<any> => {
+    public putImageCrop = async (body: PutImageCropSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
             return await this.put(`/image/crop`, str);
@@ -136,7 +136,7 @@ export class Api {
      * postImageCrop creates a new image when cropped
      * @param body ImageCropSchema
      */
-    public postImageCrop = async (body: ImageCropSchema): Promise<any> => {
+    public postImageCrop = async (body: PostImageCropSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
             return await this.post(`/image/crop`, str);
@@ -163,9 +163,9 @@ export class Api {
         }
     };
 
-    public deleteImage = async (id: string): Promise<any> => {
+    public deleteImage = async (origin: string, id: string, name: string): Promise<any> => {
         try {
-            return await this.delete(`/image/${id}`);
+            return await this.delete(`/image/${origin}/${id}/${name}`);
         } catch (err) {
             throw err;
         }
@@ -173,9 +173,9 @@ export class Api {
 
     /** Routes for images wanted and pending */
 
-    public getImageIds = async (origin: string, collection: string): Promise<ImageSchema[]> => {
+    public getImageIds = async (origin: string, collection: string): Promise<PictureSchema[]> => {
         try {
-            return await this.get(`/images/id/${origin}/${collection}`);
+            return await this.get(`/images/id/${collection}/${origin}`);
         } catch (err) {
             throw err;
         }
@@ -193,9 +193,10 @@ export class Api {
 
     };
 
-    public deleteImageUnwanted = async (id: string): Promise<any> => {
+    public deleteImageUnwanted = async (body: DeleteImageUnwantedSchema): Promise<any> => {
         try {
-            return await this.delete(`/image/unwanted/${id}`);
+            const str = JSON.stringify(body);
+            return await this.delete(`/image/unwanted`, str);
         } catch (err) {
             throw err;
         }
@@ -203,7 +204,7 @@ export class Api {
 
     /** Routes for images unwanted */
 
-    public getImagesUnwanted = async (): Promise<ImageSchema[]> => {
+    public getImagesUnwanted = async (): Promise<PictureSchema[]> => {
         try {
             return await this.get(`/images/unwanted`);
         } catch (err) {
@@ -213,7 +214,7 @@ export class Api {
 
     /** Routes for one tag */
 
-    public postTagWanted = async (body: PostTagSchema): Promise<any> => {
+    public postTagWanted = async (body: TagSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
             return await this.post(`/tag/wanted`, str);
@@ -222,7 +223,7 @@ export class Api {
         }
     };
 
-    public postTagUnwanted = async (body: PostTagSchema): Promise<any> => {
+    public postTagUnwanted = async (body: TagSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
             return await this.post(`/tag/unwanted`, str);
@@ -268,7 +269,7 @@ export class Api {
 
     /** Routes for one unwanted user */
 
-    public postUserUnwanted = async (body: PostUserSchema): Promise<any> => {
+    public postUserUnwanted = async (body: UserSchema): Promise<any> => {
         try {
             const str = JSON.stringify(body);
             return await this.post(`/user/unwanted`, str);

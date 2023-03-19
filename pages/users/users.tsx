@@ -65,12 +65,12 @@ export default function Users() {
                 </Table.Header>
                 <Table.Body>
                     {usersUnwanted.map(user =>
-                        <Table.Row key={user._id}>
-                            <Table.Cell>{user._id}</Table.Cell>
+                        <Table.Row key={user.id}>
+                            <Table.Cell>{user.id}</Table.Cell>
                             <Table.Cell>{user.name}</Table.Cell>
                             <Table.Cell>{user.origin}</Table.Cell>
                             <Table.Cell>{user.creationDate.toDateString()}</Table.Cell>
-                            <Table.Cell><Button color="error" onPress={() => { deleteUserUnwanted(user._id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
+                            <Table.Cell><Button color="error" onPress={() => { deleteUserUnwanted(user.id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>
             </Table> :

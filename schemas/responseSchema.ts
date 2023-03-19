@@ -1,33 +1,34 @@
 // keep _id to match type of mongodb
-export interface ImageSchema {
-    _id: string,
+export interface PictureSchema {
     origin: string,
+    id: string,
+    name: string,
     originID: string,
     user: UserSchema,
     extension: string,
-    name: string,
-    size: ImageSizeSchema[],
+    sizes: PictureSizeSchema[],
     title: string,
     description: string,
     license: string,
     creationDate: Date,
-    tags: TagSchema[] | undefined,
+    tags: PictureTagSchema[],
 }
 
 // keep _id to match type of mongodb
-export interface TagSchema {
-    _id: string,
+export interface PictureTagSchema {
+    id: string,
     name: string,
-    origin: TagOriginSchema,
     creationDate: Date,
+    originName: string,
+    boxInformation?: BoxInformation,
 }
 
-export interface UserSchema {
-    _id: string,
-    origin: string,
-    name: string,
-    originID: string,
-    creationDate: Date,
+export interface BoxInformation {
+    model?: string,
+    weights?: string,
+    pictureSizeID: string,
+    box: BoxSchema,
+    confidence?: number,
 }
 
 export interface BoxSchema {
@@ -37,17 +38,24 @@ export interface BoxSchema {
     height: number,
 }
 
-export interface ImageSizeSchema {
-    _id: string,
+export interface PictureSizeSchema {
+    id: string,
     creationDate: Date,
     box: BoxSchema,
 }
 
-export interface TagOriginSchema {
+export interface UserSchema {
+    origin: string,
+    id?: string,
     name: string,
-    model: string,
-    weights: string,
-    imageSizeID: string,
-    box: BoxSchema,
-    confidence: number,
+    originID: string,
+    creationDate?: Date,
+}
+
+export interface TagSchema {
+    type?: string,
+    id?: string,
+    name: string,
+    creationDate?: Date,
+    originName: string,
 }

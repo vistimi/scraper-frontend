@@ -3,7 +3,6 @@ import { getSession } from "next-auth/react"
 import { Api } from "@services/api";
 import { Button, Table, Input } from '@nextui-org/react';
 import { TagSchema } from 'schemas/responseSchema';
-import { PostTagSchema } from 'schemas/requestSchema';
 import { ModalError } from '@components/global/modal';
 import { NavBar } from '@components/global/navBar';
 
@@ -67,11 +66,9 @@ export default function Tags() {
     const addTagWanted = async (e) => {
         try {
             if (e.key === 'Enter') {
-                const body: PostTagSchema = {
+                const body: TagSchema = {
                     name: e.target.value,
-                    origin: {
-                        "name": "gui",
-                    }
+                    originName: "gui",
                 }
                 await api.postTagWanted(body);
                 await loadTagsWanted(api);
@@ -84,11 +81,9 @@ export default function Tags() {
     const addTagUnwanted = async (e) => {
         try {
             if (e.key === 'Enter') {
-                const body: PostTagSchema = {
+                const body: TagSchema = {
                     name: e.target.value,
-                    origin: {
-                        "name": "gui",
-                    }
+                    originName: "gui",
                 }
                 await api.postTagUnwanted(body);
                 await loadTagsUnwanted(api);
@@ -121,12 +116,12 @@ export default function Tags() {
                 </Table.Header>
                 <Table.Body>
                     {tagsWanted.map(tag =>
-                        <Table.Row key={tag._id}>
-                            <Table.Cell>{tag._id}</Table.Cell>
+                        <Table.Row key={tag.id}>
+                            <Table.Cell>{tag.id}</Table.Cell>
                             <Table.Cell>{tag.name}</Table.Cell>
-                            <Table.Cell>{tag.origin.name}</Table.Cell>
+                            <Table.Cell>{tag.originName}</Table.Cell>
                             <Table.Cell>{tag.creationDate.toDateString()}</Table.Cell>
-                            <Table.Cell><Button color="error" onPress={() => { deleteTagWanted(tag._id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
+                            <Table.Cell><Button color="error" onPress={() => { deleteTagWanted(tag.id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>
             </Table> :
@@ -153,12 +148,12 @@ export default function Tags() {
                 </Table.Header>
                 <Table.Body>
                     {tagsUnwanted.map(tag =>
-                        <Table.Row key={tag._id}>
-                            <Table.Cell>{tag._id}</Table.Cell>
+                        <Table.Row key={tag.id}>
+                            <Table.Cell>{tag.id}</Table.Cell>
                             <Table.Cell>{tag.name}</Table.Cell>
-                            <Table.Cell>{tag.origin.name}</Table.Cell>
+                            <Table.Cell>{tag.originName}</Table.Cell>
                             <Table.Cell>{tag.creationDate.toDateString()}</Table.Cell>
-                            <Table.Cell><Button color="error" onPress={() => { deleteTagUnwanted(tag._id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
+                            <Table.Cell><Button color="error" onPress={() => { deleteTagUnwanted(tag.id) }} auto css={{ color: "black" }}>DELETE</Button></Table.Cell>
                         </Table.Row>)}
                 </Table.Body>
             </Table> :

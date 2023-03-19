@@ -2,10 +2,10 @@ import { BoxSchema, TagSchema } from "./responseSchema";
 
 /** Schema for images wanted and pending */
 
-export interface PutImageTagsPushSchema {
+export interface PutImageTagSchema {
     origin: string,
     id: string,
-    tags: TagSchema[],
+    tag: TagSchema,
 }
 
 export interface PutImageTagsPullSchema {
@@ -14,16 +14,24 @@ export interface PutImageTagsPullSchema {
     names: string[],
 }
 
-export interface ImageCropSchema {
+export interface PutImageCropSchema {
+    origin: string,
     id: string,
+    name: string,
+    box: BoxSchema,
+}
+
+export interface PostImageCropSchema {
+    origin: string,
+    id: string,
+    name: string,
+    imageSizeID: string,
     box: BoxSchema,
 }
 
 export interface ImageCopySchema {
     origin: string,
-    originID: string,
-    name: string,
-    extension: string,
+    ID: string,
 }
 
 export interface DeleteImageSchema {
@@ -31,14 +39,15 @@ export interface DeleteImageSchema {
     id: string,
 }
 
-export interface PutImageTagsPullSchema {
+export interface DeleteImageTagSchema {
     origin: string,
     id: string,
-    names: string[],
+    tagID: string,
 }
 
 export interface PostImageTransfer {
-    originID: string,
+    origin: string,
+    id: string,
     from: string,
     to: string,
 }
@@ -46,9 +55,8 @@ export interface PostImageTransfer {
 /** Schema for images unwanted */
 
 export interface PostImageUnwantedSchema {
-    _id: string,
     origin: string,
-    originID: string,
+    id: string,
 }
 
 export interface DeleteImageUnwantedSchema {
@@ -56,19 +64,7 @@ export interface DeleteImageUnwantedSchema {
     id: string,
 }
 
-/** Schema for tags */
-
-export interface PostTagSchema {
-    name: string,
-    origin: {
-        "name": string,
-    },
-}
-
-/** Schema for users */
-
-export interface PostUserSchema {
+export interface DeleteImageUnwantedSchema {
     origin: string,
-    name: string,
-    originID: string,
+    id: string,
 }
