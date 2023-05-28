@@ -57,11 +57,11 @@ jobs:
       - name: Setup
         id: setup
         run: |
-          apt update -qq
-          apt install wget -y -qq
-          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64  -qq -O /usr/bin/yq
-          chmod +x /usr/bin/yq
-          echo "PORT=$(yq eval '.port' config/config.yml)" >> $GITHUB_OUTPUT
+          sudo apt update -qq
+          sudo apt install wget -y -qq
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64  -qq -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+          echo "PORT=$(sudo yq eval '.port' config/config.yml)" >> $GITHUB_OUTPUT
 
       - name: Display
         run: |
