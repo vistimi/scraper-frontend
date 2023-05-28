@@ -26,7 +26,7 @@ jobs:
     outputs:
       IMAGE_TAG: ${{ steps.build-image.outputs.IMAGE_TAG }}
       ECR_LOGIN_PASSWORD: ${{ steps.get-login-password.outputs.ECR_LOGIN_PASSWORD }}
-      PORT: ${{ steps.get-login-password.outputs.PORT }}
+      PORT: ${{ steps.setup.outputs.PORT }}
 
     steps:
       - name: Checkout
@@ -60,7 +60,7 @@ jobs:
           if [[ $AWS_CLI_SERVICE == ecr ]]; then
             echo "ECR_LOGIN_PASSWORD=$(aws ecr get-login-password --region $AWS_REGION)" >> $GITHUB_OUTPUT
           elif [[ $AWS_CLI_SERVICE == ecr-public ]]; then
-            echo "ECR_LOGIN_PASSWORD=$(aws ecr-public get-login-password --region $AWS_REGION)" >> $GITHUB_OUTPUT  | docker login --username AWS --password-stdin public.ecr.aws
+            echo "ECR_LOGIN_PASSWORD=$(aws ecr-public get-login-password --region $AWS_REGION)" >> $GITHUB_OUTPUT
           fi
 
       - name: login to ECR

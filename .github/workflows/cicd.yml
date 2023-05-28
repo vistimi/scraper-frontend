@@ -129,7 +129,7 @@ jobs:
           if [[ $AWS_CLI_SERVICE == ecr ]]; then
             echo "ECR_LOGIN_PASSWORD=$(aws ecr get-login-password --region $AWS_REGION)" >> $GITHUB_OUTPUT
           elif [[ $AWS_CLI_SERVICE == ecr-public ]]; then
-            echo "ECR_LOGIN_PASSWORD=$(aws ecr-public get-login-password --region $AWS_REGION)" >> $GITHUB_OUTPUT  | docker login --username AWS --password-stdin public.ecr.aws
+            echo "ECR_LOGIN_PASSWORD=$(aws ecr-public get-login-password --region $AWS_REGION)" >> $GITHUB_OUTPUT
           fi
 
       - name: login to ECR
