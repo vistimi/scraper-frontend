@@ -1,14 +1,14 @@
 import React, { createContext, useEffect, useState } from "react";
 import { Button, Dropdown } from "@nextui-org/react";
 import { Api } from "@services/api";
-import { ImageSchema } from 'schemas/responseSchema';
-import { ImageCopySchema, ImageCropSchema, PutImageTagsPushSchema } from "schemas/requestSchema";
+import { PictureSchema } from 'schemas/responseSchema';
+import { ImageCopySchema, PutImageCropSchema, PostImageCropSchema, PutImageTagSchema } from "schemas/requestSchema";
 import { Garment, GarmentInformations } from "schemas/garnment";
 import { CanvasWrapper, RectangleDimensions, RectangleInformations } from "./canvasWrapper";
 
 interface ImageEditorProps {
     api: Api,
-    image: ImageSchema,
+    image: PictureSchema,
     updateParent: () => void,
     interactWithCanvas: boolean,
 }
@@ -39,16 +39,16 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     useEffect(
         () => {
             const newState = { ...canvasWrapperState }  // to avoid implicit pointers
-            newState.passiveRectangles = props.image.tags?.filter(tag => tag.origin.confidence).map(tag => {
+            newState.passiveRectangles = props.image.tags?.filter(tag => tag.boxInformation.confidence).map(tag => {
                 return {
                     active: false,
                     name: tag.name,
                     color: 'black',
                     dimensions: {
-                        tlx: tag.origin.box.tlx,
-                        tly: tag.origin.box.tly,
-                        width: tag.origin.box.width,
-                        height: tag.origin.box.height,
+                        tlx: tag.boxInformation.box.tlx,
+                        tly: tag.boxInformation.box.tly,
+                        width: tag.boxInformation.box.width,
+                        height: tag.boxInformation.box.height,
                     }
                 }
             });
@@ -67,24 +67,52 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     )
 
     /**
-     *  onCrop generate the body for a cropping request
+     *  onCropPut generate the body for a cropping request
      * @returns schema for croping and image
      */
-    const onCrop = (): ImageCropSchema | undefined => {
+    const onCropPut = (): PutImageCropSchema | undefined => {
         const selectedRectangleDimensions = getSelectedRectangleDimensions();
 
         if (selectedRectangleDimensions.width !== selectedRectangleDimensions.height) {
             alert('active box is not square'); return;
         }
 
-        const bodyImageCrop: ImageCropSchema = {
-            id: props.image._id,
+        const bodyImageCrop: PutImageCropSchema = {
+            origin: props.image.origin,
+            id: props.image.id,
+            name: props.image.name,
+            box: {
+                tlx: Math.round(selectedRectangleDimensions.tlx),
+                tly: Math.round(selectedRectangleDimensions.tly),
+                width: Math.round(selectedRectangleDimensions.width),
+                height: Math.round(selectedRectangleDimensions.height),
+            }
+        }
+        return bodyImageCrop
+    };
+
+    /**
+     *  onCropPost generate the body for a cropping request
+     * @returns schema for croping and image
+     */
+    const onCropPost = (): PostImageCropSchema | undefined => {
+        const selectedRectangleDimensions = getSelectedRectangleDimensions();
+
+        if (selectedRectangleDimensions.width !== selectedRectangleDimensions.height) {
+            alert('active box is not square'); return;
+        }
+
+        const bodyImageCrop: PostImageCropSchema = {
+            origin: props.image.origin,
+            id: props.image.id,
+            name: props.image.name,
             box: {
                 tlx: Math.round(selectedRectangleDimensions.tlx),
                 tly: Math.round(selectedRectangleDimensions.tly),
                 width: Math.round(selectedRectangleDimensions.width),
                 height: Math.round(selectedRectangleDimensions.height),
             },
+            imageSizeID: props.image.sizes.sort((a, b) => b.creationDate.getTime() - a.creationDate.getTime())[0].id,   // last creation date
         }
         return bodyImageCrop
     };
@@ -93,7 +121,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
      *  requestCropCurrentImage update the size, tag boxes and file of the image in the backend
      */
     const requestCropCurrentImage = async (): Promise<void> => {
-        const body = onCrop();
+        const body = onCropPut();
         if (!body) return;
         await props.api.putImageCrop(body);  // update current image
         props.updateParent();
@@ -103,7 +131,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
      * requestCropNewImage creates a new image from this cropping in the backend
      */
     const requestCropNewImage = async (): Promise<void> => {
-        const body = onCrop();
+        const body = onCropPost();
         if (!body) return;
         await props.api.postImageCrop(body);  // create a new image
         props.updateParent();
@@ -115,9 +143,7 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
     const requestCopyImage = async (): Promise<void> => {
         const body: ImageCopySchema = {
             origin: props.image.origin,
-            originID: props.image.originID,
-            name: props.image.name,
-            extension: props.image.extension,
+            ID: props.image.id,
         };
         await props.api.copyImage(body);  // create a new image
         props.updateParent();
@@ -172,15 +198,15 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
         // });
         // setCanvasWrapperState(newCanvasWrapperState);
 
-        const body: PutImageTagsPushSchema = {
+        const body: PutImageTagSchema = {
             origin: props.image.origin,
-            id: props.image._id,
-            tags: [{
+            id: props.image.id,
+            tag: {
                 "name": tagName,
                 // @ts-ignore
                 "origin": {
                     "name": 'gui',
-                    "imageSizeID": props.image.size[0]._id,
+                    "imageSizeID": props.image.sizes.sort((a, b) => b.creationDate.getTime() - a.creationDate.getTime())[0].id,
                     "box": {
                         "tlx": Math.round(selectedRectangleDimensions.tlx),
                         "tly": Math.round(selectedRectangleDimensions.tly),
@@ -189,9 +215,9 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     },
                     "confidence": 1.0,
                 },
-            }],
+            },
         }
-        await props.api.putImageTagsPush(body);
+        await props.api.putImageTag(body);
     }
 
     type RecursiveMapOf<T> = Map<string, RecursiveMapOf<T>>  // recursive map type
@@ -316,9 +342,9 @@ export const ImageEditor = (props: ImageEditorProps): JSX.Element => {
                     <></>}
                 <br />
             </div>
-            <Button auto onPress={async ()=>{await requestCropCurrentImage()}} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP CURRENT IMAGE</Button>
-            <Button auto onPress={async ()=>{await requestCropNewImage()}} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP NEW IMAGE</Button>
-            <Button auto onPress={async ()=>{await requestCopyImage()}} css={{ marginLeft: "auto", marginRight: "auto" }} color="success">COPY IMAGE</Button>
+            <Button auto onPress={async () => { await requestCropCurrentImage() }} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP CURRENT IMAGE</Button>
+            <Button auto onPress={async () => { await requestCropNewImage() }} css={{ marginLeft: "auto", marginRight: "auto" }} color="warning">CROP NEW IMAGE</Button>
+            <Button auto onPress={async () => { await requestCopyImage() }} css={{ marginLeft: "auto", marginRight: "auto" }} color="success">COPY IMAGE</Button>
         </>
     );
 }

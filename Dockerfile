@@ -35,18 +35,17 @@ RUN npm prune --production
 # runner
 FROM builder-final AS runner-workflow
 
-ARG USER_NAME=user
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-RUN apk update && apk add --update sudo
-RUN addgroup --gid $USER_GID $USER_NAME \
-    && adduser --uid $USER_UID -D -G $USER_NAME $USER_NAME \
-    && echo $USER_NAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USER_NAME \
-    && chmod 0440 /etc/sudoers.d/$USER_NAME
-USER $USER_NAME
+# ARG USER_NAME=user
+# ARG USER_UID=1000
+# ARG USER_GID=$USER_UID
+# RUN apk update && apk add --update sudo
+# RUN addgroup --gid $USER_GID $USER_NAME \
+#     && adduser --uid $USER_UID -D -G $USER_NAME $USER_NAME \
+#     && echo $USER_NAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USER_NAME \
+#     && chmod 0440 /etc/sudoers.d/$USER_NAME
+# USER $USER_NAME
 
 WORKDIR /usr/app
-
 COPY --from=builder-workflow /usr/tmp/node_modules ./node_modules
 COPY --from=builder-workflow /usr/tmp/.next ./.next
 COPY --from=builder-workflow /usr/tmp/package.json ./package.json

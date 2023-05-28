@@ -4,16 +4,8 @@ name: CI/CD
 on:
   workflow_dispatch:
     inputs:
-      aws-account-id:
-        description: "AWS Account ID"
-        required: true
-        type: string
       aws-account-name:
         description: "AWS Account Name"
-        required: true
-        type: string
-      aws-region:
-        description: "AWS Region to launch the instance"
         required: true
         type: string
       common-name:
@@ -30,8 +22,9 @@ on:
         type: string
 
 env:
-  AWS_ACCOUNT_ID: ${{ inputs.aws-account-id }}
-  AWS_REGION: ${{ inputs.aws-region }}
+  AWS_ACCOUNT_NAME: ${{ inputs.aws-account-name }}
+  AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
   COMMON_NAME: ${{ inputs.common-name }}
 
 jobs:
@@ -50,24 +43,35 @@ jobs:
   s3-env:
     name: S3 env
     runs-on: ubuntu-latest
-    environment:
-      name: ${{ inputs.aws-account-name }}
+    environment: ${{ inputs.aws-account-name }}
     env:
       BACKEND_DNS: ${{ inputs. backend-dns }}
+      BRANCH: ${{ github.head_ref || github.ref_name }}
+      AWS_ACCESS_KEY_ENV: ${{ secrets.AWS_ACCESS_KEY }}
       BUCKET_ENV: ${{ inputs.common-name }}-env
-      ENV_FILE_NAME: ".env"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        
+      - name: Setup
+        id: setup
+        run: |
+          apt update -qq
+          apt install wget -y -qq
+          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64  -qq -O /usr/bin/yq
+          chmod +x /usr/bin/yq
+          echo "PORT=$(yq eval '.port' config/config.yml)" >> $GITHUB_OUTPUT
 
-      - name: Display non-sensitive variables
+      - name: Display
         run: |
           printf " \
-          ENV_FILE_NAME = $ENV_FILE_NAME\n \
-          BACKEND_DNS = $BACKEND_DNS\n \
-          IMAGES_BUCKET = $BUCKET_ENV\n \
+          AWS_ACCOUNT_NAME = $AWS_ACCOUNT_NAME\n \
+          BRANCH = $BRANCH\n \
           AWS_REGION = $AWS_REGION\n \
+          AWS_ACCESS_KEY = ${{ secrets.AWS_ACCESS_KEY }}\n \
+          AWS_SECRET_KEY = ${{ secrets.AWS_SECRET_KEY }}\n \
+          S3 file = s3://$BUCKET_ENV/$BRANCH.env\n \
           "
 
       - name: setup AWS CLI
@@ -81,8 +85,9 @@ jobs:
         run: |
           cat <<EOF > .env
           NEXT_PUBLIC_API_URL=$BACKEND_DNS
+          PORT=${{ steps.setup.outputs.PORT }}
           EOF
-          aws s3 cp .env s3://$BUCKET_ENV/$ENV_FILE_NAME
+          aws s3 cp .env s3://$BUCKET_ENV/$BRANCH.env
 
   ecr:
     name: ECR
@@ -91,8 +96,9 @@ jobs:
       name: ${{ inputs.aws-account-name }}
     env:
       AWS_CLI_SERVICE: ecr
-      DOCKER_FOLDER_PATH: ""
+      DOCKER_FOLDER_PATH: Dockerfile
       ECR_REPOSITORY: ${{ inputs.common-name }}
+      IMAGE_TAG: "latest"
     needs: [build]
     outputs:
       IMAGE_TAG: ${{ steps.build-image.outputs.IMAGE_TAG }}
@@ -107,7 +113,6 @@ jobs:
           AWS_CLI_SERVICE = $AWS_CLI_SERVICE\n \
           AWS_ACCOUNT_ID = $AWS_ACCOUNT_ID\n \
           AWS_REGION = $AWS_REGION\n \
-          DOCKER_FOLDER_PATH = $DOCKER_FOLDER_PATH\n \
           ECR_REPOSITORY = $ECR_REPOSITORY\n \
           "
 
@@ -118,25 +123,38 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }}
           aws configure set region $AWS_REGION
 
+      - name: Get ECR login password
+        id: get-login-password
+        run: |
+          if [[ $AWS_CLI_SERVICE == ecr ]]; then
+            echo "ECR_LOGIN_PASSWORD=$(aws ecr get-login-password --region $AWS_REGION)" >> $GITHUB_OUTPUT
+          elif [[ $AWS_CLI_SERVICE == ecr-public ]]; then
+            echo "ECR_LOGIN_PASSWORD=$(aws ecr-public get-login-password --region $AWS_REGION)" >> $GITHUB_OUTPUT  | docker login --username AWS --password-stdin public.ecr.aws
+          fi
+
       - name: login to ECR
         run: |
           if [[ $AWS_CLI_SERVICE == ecr ]]; then
-            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+            docker login --username AWS --password ${{ steps.get-login-password.outputs.ECR_LOGIN_PASSWORD }} $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
           elif [[ $AWS_CLI_SERVICE == ecr-public ]]; then
-            aws ecr-public get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin public.ecr.aws
+            docker login --username AWS --password ${{ steps.get-login-password.outputs.ECR_LOGIN_PASSWORD }} public.ecr.aws
           fi
 
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
-        env:
-          IMAGE_TAG: "latest"
         run: |
           export ECR_URI=$(aws $AWS_CLI_SERVICE describe-repositories --repository-names $ECR_REPOSITORY --output text --query "repositories[].[repositoryUri]")
           echo "ECR_URI= $ECR_URI"
-          docker build ${GITHUB_WORKSPACE}/$DOCKER_FOLDER_PATH -t $ECR_URI/$IMAGE_TAG
+          # docker build ${GITHUB_WORKSPACE}/$DOCKER_FOLDER_PATH -t $ECR_URI/$IMAGE_TAG
+          docker build -t $ECR_URI/$IMAGE_TAG -f $DOCKER_FOLDER_PATH .
           docker tag $(docker images -q $ECR_URI/$IMAGE_TAG) $ECR_URI:$IMAGE_TAG
           docker push $ECR_URI:$IMAGE_TAG
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+      
+      - name: Wait for image to be available
+        run: |
+          aws ecr wait image-scan-complete --repository-name $ECR_REPOSITORY --image-id imageTag=$IMAGE_TAG
+          aws ecr describe-images --repository-name $ECR_REPOSITORY --image-ids imageTag=$IMAGE_TAG --output json
 
   ecs:
     name: ECS
@@ -166,33 +184,6 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }}
           aws configure set region $AWS_REGION
 
-      - name: create json task definition
-        run: |
-          TASK_DEFINITION=$(aws ecs describe-task-definition \
-            --task-definition $COMMON_NAME \
-            --query 'taskDefinition' \
-            --output json)
-          cat << EOF > task_definition.json
-          {
-            "containerDefinitions": $(jq  '.containerDefinitions' <<< $TASK_DEFINITION),
-            "executionRoleArn": $(jq  '.executionRoleArn' <<< $TASK_DEFINITION),
-            "taskRoleArn": $(jq  '.taskRoleArn' <<< $TASK_DEFINITION),
-            "family": $(jq  '.family' <<< $TASK_DEFINITION),
-            "requiresCompatibilities": $(jq  '.requiresCompatibilities' <<< $TASK_DEFINITION),
-            "memory": $(jq  '.memory' <<< $TASK_DEFINITION),
-            "cpu": $(jq  '.cpu' <<< $TASK_DEFINITION)
-          }
-          EOF
-          cat task_definition.json
-
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task_definition.json
-          container-name: ${{ inputs.common-name }}
-          image: ${{ needs.ecr.outputs.IMAGE_TAG }}
-
       - name: Update service
         run: |
           LATEST_TASK_ARN=$(aws ecs list-task-definitions \
@@ -212,7 +203,7 @@ jobs:
 
       - name: Wait for tasks
         run: |
-          sleep 30
+          sleep 30s
           TASKS=$(aws ecs list-tasks \
           --region $AWS_REGION \
           --cluster $COMMON_NAME \
@@ -225,21 +216,25 @@ jobs:
           --sort DESC \
           --query 'taskDefinitionArns[0]' \
           --output text)
+
           for task in $TASKS; do
               tasksDescription=$(aws ecs describe-tasks --region $AWS_REGION --cluster $COMMON_NAME --tasks $task --query 'tasks[]' --output json) || exit 1
               echo "tasksDescription=$tasksDescription"
               latestStatus=$(jq -r  '.[]|.lastStatus' <<< $tasksDescription)
               taskDefinitionArn=$(jq -r  '.[]|.taskDefinitionArn' <<< $tasksDescription)
-              echo "Waiting for task $task to be RUNNING, currently $taskStatus"
+              echo "Waiting for task $task to be RUNNING, currently $latestStatus"
               echo "Waiting for task $task to have definition ARN $LATEST_TASK_DEFINITION_ARN, currently $taskDefinitionArn"
               
-              while [[ $latestStatus != "RUNNING" && taskDefinitionArn != $LATEST_TASK_DEFINITION_ARN ]]
-              do
+              i=0
+              while [[ $latestStatus != "RUNNING" && taskDefinitionArn != $LATEST_TASK_DEFINITION_ARN ]]; do
                 tasksDescription=$(aws ecs describe-tasks --region $AWS_REGION --cluster $COMMON_NAME --tasks $task --query 'tasks[]' --output json)
                 latestStatus=$(jq -r  '.[]|.lastStatus' <<< $tasksDescription)
                 taskDefinitionArn=$(jq -r  '.[]|.taskDefinitionArn' <<< $tasksDescription)
-                echo "Waiting for task $task to be RUNNING, currently $taskStatus"
+                echo "Waiting for task $task to be RUNNING, currently $latestStatus"
                 echo "Waiting for task $task to have definition ARN $LATEST_TASK_DEFINITION_ARN, currently $taskDefinitionArn"
-                sleep 5s
+                sleep 10s
+
+                if [ $i -gt 30 ] || [ "$latestStatus" = "STOPPED" ]; then exit 1; fi
+                i=$((i+1))
               done
           done
