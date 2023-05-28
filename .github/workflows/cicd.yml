@@ -48,7 +48,7 @@ jobs:
       BACKEND_DNS: ${{ inputs. backend-dns }}
       BRANCH: ${{ github.head_ref || github.ref_name }}
       AWS_ACCESS_KEY_ENV: ${{ secrets.AWS_ACCESS_KEY }}
-      BUCKET_ENV: ${{ inputs.common-name }}-env
+      BUCKET_ENV: ${{ inputs.common-name }}-env # TODO: hardcoded extension here
 
     steps:
       - name: Checkout

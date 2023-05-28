@@ -25,12 +25,9 @@ WORKDIR /usr/tmp
 
 RUN apk add --update --no-cache libc6-compat
 
-COPY package.json package-lock.json* ./
-# RUN npm ci --omit=dev
+COPY . ./
 RUN npm ci
-
 RUN npm run build
-RUN npm prune --production
 
 # runner
 FROM builder-final AS runner-workflow
@@ -46,16 +43,14 @@ FROM builder-final AS runner-workflow
 # USER $USER_NAME
 
 WORKDIR /usr/app
-COPY --from=builder-workflow /usr/tmp/node_modules ./node_modules
-COPY --from=builder-workflow /usr/tmp/.next ./.next
-COPY --from=builder-workflow /usr/tmp/package.json ./package.json
+COPY --from=builder-workflow /usr/tmp/node_modules /usr/tmp/.next /usr/tmp/package.json /usr/tmp/package-lock.json ./
 
 ENV NODE_ENV production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
+# TODO: port as arg
 EXPOSE 3000
-
 ENV PORT 3000
 
 CMD ["npm", "run", "start"]
