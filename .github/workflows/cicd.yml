@@ -22,10 +22,17 @@ on:
         type: string
 
 env:
+  COMMON_NAME: ${{ inputs.common-name }}
   AWS_ACCOUNT_NAME: ${{ inputs.aws-account-name }}
   AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
-  AWS_REGION: ${{ vars.AWS_REGION }}
-  COMMON_NAME: ${{ inputs.common-name }}
+  AWS_REGION: ${{ vars.AWS_REGION }}  
+  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+  AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+  GH_ORG: KookaS
+  GH_REPO: infrastructure-modules
+  GH_BRANCH: master
+  GH_SCRIPT_PATH: .github/workflows
+  GH_INFRA_TOKEN: ${{ secrets.GH_INFRA_TOKEN }}
 
 jobs:
   build:
@@ -47,30 +54,16 @@ jobs:
     env:
       BACKEND_DNS: ${{ inputs. backend-dns }}
       BRANCH: ${{ github.head_ref || github.ref_name }}
-      AWS_ACCESS_KEY_ENV: ${{ secrets.AWS_ACCESS_KEY }}
       BUCKET_ENV: ${{ inputs.common-name }}-env # TODO: hardcoded extension here
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        
-      - name: Setup
-        id: setup
-        run: |
-          sudo apt update -qq
-          sudo apt install wget -y -qq
-          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64  -qq -O /usr/bin/yq
-          sudo chmod +x /usr/bin/yq
-          echo "PORT=$(sudo yq eval '.port' config/config.yml)" >> $GITHUB_OUTPUT
 
       - name: Display
         run: |
           printf " \
-          AWS_ACCOUNT_NAME = $AWS_ACCOUNT_NAME\n \
           BRANCH = $BRANCH\n \
-          AWS_REGION = $AWS_REGION\n \
-          AWS_ACCESS_KEY = ${{ secrets.AWS_ACCESS_KEY }}\n \
-          AWS_SECRET_KEY = ${{ secrets.AWS_SECRET_KEY }}\n \
           S3 file = s3://$BUCKET_ENV/$BRANCH.env\n \
           "
 
@@ -95,66 +88,31 @@ jobs:
     environment:
       name: ${{ inputs.aws-account-name }}
     env:
-      AWS_CLI_SERVICE: ecr
+      SCRIPT_NAME: ecr-set.sh
+      LOG_FILE: log.out
+      AWS_CLI_SERVICE: ecr # private
       DOCKER_FOLDER_PATH: Dockerfile
-      ECR_REPOSITORY: ${{ inputs.common-name }}
       IMAGE_TAG: "latest"
     needs: [build]
-    outputs:
-      IMAGE_TAG: ${{ steps.build-image.outputs.IMAGE_TAG }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Display non-sensitive variables
+      - name: Run script
+        id: script
         run: |
-          printf " \
-          AWS_CLI_SERVICE = $AWS_CLI_SERVICE\n \
-          AWS_ACCOUNT_ID = $AWS_ACCOUNT_ID\n \
-          AWS_REGION = $AWS_REGION\n \
-          ECR_REPOSITORY = $ECR_REPOSITORY\n \
-          "
+          curl -L \
+            -H "Accept: application/vnd.github.v3.raw" \
+            -H "Authorization: Bearer $GH_INFRA_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/$GH_ORG/$GH_REPO/contents/$GH_SCRIPT_PATH/$SCRIPT_NAME?ref=$GH_BRANCH > $SCRIPT_NAME && chmod +x $SCRIPT_NAME
 
-      - name: setup AWS CLI
-        run: |
-          aws --version
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }}
-          aws configure set region $AWS_REGION
+          eval res=$(./$SCRIPT_NAME LOG_FILE=$LOG_FILE AWS_ACCESS_KEY=$AWS_ACCESS_KEY AWS_SECRET_KEY=$AWS_SECRET_KEY AWS_REGION=$AWS_REGION AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID COMMON_NAME=$COMMON_NAME AWS_CLI_SERVICE=ecr ECR_CREATE=false IMAGE_TAG=$IMAGE_TAG DOCKER_FOLDER_PATH=$DOCKER_FOLDER_PATH)
 
-      - name: Get ECR login password
-        id: get-login-password
-        run: |
-          if [[ $AWS_CLI_SERVICE == ecr ]]; then
-            echo "ECR_LOGIN_PASSWORD=$(aws ecr get-login-password --region $AWS_REGION)" >> $GITHUB_OUTPUT
-          elif [[ $AWS_CLI_SERVICE == ecr-public ]]; then
-            echo "ECR_LOGIN_PASSWORD=$(aws ecr-public get-login-password --region $AWS_REGION)" >> $GITHUB_OUTPUT
+          echo -e '\033[46mLOGS\033[0m'; cat $LOG_FILE
+          if [ -n "$(grep -i error $LOG_FILE)" ]; then
+            echo -e '\033[41mERRORS\033[0m'; grep -ni error $LOG_FILE | sed 's/$/\n/'; exit 10
           fi
-
-      - name: login to ECR
-        run: |
-          if [[ $AWS_CLI_SERVICE == ecr ]]; then
-            docker login --username AWS --password ${{ steps.get-login-password.outputs.ECR_LOGIN_PASSWORD }} $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-          elif [[ $AWS_CLI_SERVICE == ecr-public ]]; then
-            docker login --username AWS --password ${{ steps.get-login-password.outputs.ECR_LOGIN_PASSWORD }} public.ecr.aws
-          fi
-
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        run: |
-          export ECR_URI=$(aws $AWS_CLI_SERVICE describe-repositories --repository-names $ECR_REPOSITORY --output text --query "repositories[].[repositoryUri]")
-          echo "ECR_URI= $ECR_URI"
-          # docker build ${GITHUB_WORKSPACE}/$DOCKER_FOLDER_PATH -t $ECR_URI/$IMAGE_TAG
-          docker build -t $ECR_URI/$IMAGE_TAG -f $DOCKER_FOLDER_PATH .
-          docker tag $(docker images -q $ECR_URI/$IMAGE_TAG) $ECR_URI:$IMAGE_TAG
-          docker push $ECR_URI:$IMAGE_TAG
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
-      
-      - name: Wait for image to be available
-        run: |
-          aws ecr wait image-scan-complete --repository-name $ECR_REPOSITORY --image-id imageTag=$IMAGE_TAG
-          aws ecr describe-images --repository-name $ECR_REPOSITORY --image-ids imageTag=$IMAGE_TAG --output json
 
   ecs:
     name: ECS
@@ -163,78 +121,25 @@ jobs:
       name: ${{ inputs.aws-account-name }}
     needs: [ecr, s3-env]
     env:
-      IMAGE_TAG: ${{ needs.ecr.outputs.IMAGE_TAG }}
+      SCRIPT_NAME: ecs-set.sh
+      LOG_FILE: log.out
       DESIRED_COUNT: ${{ inputs.task-desired-count }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Display variables
+      - name: Run script
+        id: script
         run: |
-          printf " \
-          AWS_REGION = $AWS_REGION\n \
-          IMAGE_TAG = $IMAGE_TAG\n \
-          "
+          curl -L \
+            -H "Accept: application/vnd.github.v3.raw" \
+            -H "Authorization: Bearer $GH_INFRA_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/$GH_ORG/$GH_REPO/contents/$GH_SCRIPT_PATH/$SCRIPT_NAME?ref=$GH_BRANCH > $SCRIPT_NAME && chmod +x $SCRIPT_NAME
 
-      - name: setup AWS CLI
-        run: |
-          aws --version
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }}
-          aws configure set region $AWS_REGION
+          eval res=$(./$SCRIPT_NAME LOG_FILE=$LOG_FILE AWS_ACCESS_KEY=$AWS_ACCESS_KEY AWS_SECRET_KEY=$AWS_SECRET_KEY AWS_REGION=$AWS_REGION AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID COMMON_NAME=$COMMON_NAME)
 
-      - name: Update service
-        run: |
-          LATEST_TASK_ARN=$(aws ecs list-task-definitions \
-            --region $AWS_REGION \
-            --family-prefix $COMMON_NAME \
-            --sort DESC \
-            --query 'taskDefinitionArns[0]' \
-            --output text)
-          aws ecs update-service \
-            --cluster $COMMON_NAME \
-            --service $COMMON_NAME \
-            --force-new-deployment \
-            --region $AWS_REGION \
-            --task-definition $LATEST_TASK_ARN \
-            --desired-count $DESIRED_COUNT \
-            --output json
-
-      - name: Wait for tasks
-        run: |
-          sleep 30s
-          TASKS=$(aws ecs list-tasks \
-          --region $AWS_REGION \
-          --cluster $COMMON_NAME \
-          --query 'taskArns[]' \
-          --output text)
-          echo $TASKS
-          LATEST_TASK_DEFINITION_ARN=$(aws ecs list-task-definitions \
-          --region $AWS_REGION \
-          --family-prefix $COMMON_NAME \
-          --sort DESC \
-          --query 'taskDefinitionArns[0]' \
-          --output text)
-
-          for task in $TASKS; do
-              tasksDescription=$(aws ecs describe-tasks --region $AWS_REGION --cluster $COMMON_NAME --tasks $task --query 'tasks[]' --output json) || exit 1
-              echo "tasksDescription=$tasksDescription"
-              latestStatus=$(jq -r  '.[]|.lastStatus' <<< $tasksDescription)
-              taskDefinitionArn=$(jq -r  '.[]|.taskDefinitionArn' <<< $tasksDescription)
-              echo "Waiting for task $task to be RUNNING, currently $latestStatus"
-              echo "Waiting for task $task to have definition ARN $LATEST_TASK_DEFINITION_ARN, currently $taskDefinitionArn"
-              
-              i=0
-              while [[ $latestStatus != "RUNNING" && taskDefinitionArn != $LATEST_TASK_DEFINITION_ARN ]]; do
-                tasksDescription=$(aws ecs describe-tasks --region $AWS_REGION --cluster $COMMON_NAME --tasks $task --query 'tasks[]' --output json)
-                latestStatus=$(jq -r  '.[]|.lastStatus' <<< $tasksDescription)
-                taskDefinitionArn=$(jq -r  '.[]|.taskDefinitionArn' <<< $tasksDescription)
-                echo "Waiting for task $task to be RUNNING, currently $latestStatus"
-                echo "Waiting for task $task to have definition ARN $LATEST_TASK_DEFINITION_ARN, currently $taskDefinitionArn"
-                sleep 10s
-
-                if [ $i -gt 30 ] || [ "$latestStatus" = "STOPPED" ]; then exit 1; fi
-                i=$((i+1))
-              done
-          done
+          echo -e '\033[46mLOGS\033[0m'; cat $LOG_FILE
+          if [ -n "$(grep -i error $LOG_FILE)" ]; then
+            echo -e '\033[41mERRORS\033[0m'; grep -ni error $LOG_FILE | sed 's/$/\n/'; exit 10
+          fi
