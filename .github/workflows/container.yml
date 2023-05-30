@@ -77,13 +77,12 @@ jobs:
 
   # Container network where we can access with the service name and the port
   project:
-    name: Container check localstack
+    name: Container check
     needs: [ecr]
     runs-on: ubuntu-latest
     container: ubuntu # connect the workflow steps to the network
     environment: KookaS
     env:
-      ROOT: /
       HEALTHCHECK: /healthz
     services:
       local-project:

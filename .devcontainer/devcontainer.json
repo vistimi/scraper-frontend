@@ -4,7 +4,7 @@
 	"name": "Node",
 	"build": {
 		"dockerfile": "Dockerfile",
-		"args": { "VARIANT": "mcr.microsoft.com/devcontainers/typescript-node:16-bullseye" },
+		"args": {},
 		"target": "runner"
 	},
 	"runArgs": [

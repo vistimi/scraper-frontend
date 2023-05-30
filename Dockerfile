@@ -1,9 +1,9 @@
-ARG ALPINE_VARIANT=node:18.8.0-alpine
+ARG NODE_ALPINE_VARIANT=node:18.8.0-alpine
 
 #------------------
 #    BUILDER
 #------------------
-FROM $ALPINE_VARIANT AS builder
+FROM $NODE_ALPINE_VARIANT AS builder
 
 WORKDIR /usr/tmp
 
@@ -16,7 +16,7 @@ RUN npm run build
 #------------------
 #    runner
 #------------------
-FROM builder AS runner
+FROM $NODE_ALPINE_VARIANT AS runner
 
 RUN apk add --no-cache shadow
 ARG USERNAME=user
@@ -30,7 +30,10 @@ RUN addgroup --gid $USER_GID $USERNAME \
 USER $USERNAME
 
 WORKDIR /usr/app
-COPY --chown=$USERNAME:$USER_GID --from=builder /usr/tmp/node_modules /usr/tmp/.next /usr/tmp/package.json /usr/tmp/package-lock.json ./
+COPY --chown=$USERNAME:$USER_GID --from=builder /usr/tmp/package.json /usr/tmp/package-lock.json ./
+COPY --chown=$USERNAME:$USER_GID --from=builder /usr/tmp/node_modules ./node_modules
+COPY --chown=$USERNAME:$USER_GID --from=builder /usr/tmp/.next ./.next
+COPY --chown=$USERNAME:$USER_GID --from=builder /usr/tmp/config/config.yml ./config/config.yml
 
 ENV NODE_ENV production
 # Uncomment the following line in case you want to disable telemetry during runtime.
@@ -38,6 +41,5 @@ ENV NODE_ENV production
 
 # TODO: port as arg
 EXPOSE 3000
-ENV PORT 3000
 
 CMD ["npm", "run", "start"]
