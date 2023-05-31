@@ -29,23 +29,15 @@ packages:
 
     npm i
 
-## run
+#### Run with docker
 
-    npm run dev
-
-## lint
-
-    npm run lint
-
-## Docker
-
-    sudo docker build -t dataset-gui-img .
-    sudo docker run -it -p 3000:3000 --rm --name dataset-gui-run dataset-gui-img
-
-#### Backend with Docker
 ```shell
-docker build -t scraper-frontend .
-docker run --rm -it --net scraper-net  -p 3000:3000 --name scraper-run --env-file <state>.env scraper-frontend
+sudo docker build -t scraper-frontend .; sudo docker run --rm -it --net scraper-net --name scraper-frontend --network-alias backend --env-file .devcontainer/devcontainer.env scraper-frontend
+```
+
+#### Run without docker (devcontainer)
+```shell
+    npm run dev
 ```
 
 ## .env
@@ -81,4 +73,3 @@ Add this to the pages where you need authentification
     ./scripts/<script-file>
 
 npm install --save-dev jest jest-environment-jsdom @types/jest ts-jest @testing-library/react @testing-library/jest-dom
-
