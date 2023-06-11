@@ -33,6 +33,7 @@ env:
   GH_BRANCH: master
   GH_SCRIPT_PATH: .github/workflows
   GH_INFRA_TOKEN: ${{ secrets.GH_INFRA_TOKEN }}
+  PORT: 3000
 
 jobs:
   build:
@@ -78,7 +79,7 @@ jobs:
         run: |
           cat <<EOF > .env
           NEXT_PUBLIC_API_URL=$BACKEND_DNS
-          PORT=${{ steps.setup.outputs.PORT }}
+          PORT=$PORT
           EOF
           aws s3 cp .env s3://$BUCKET_ENV/$BRANCH.env
 
