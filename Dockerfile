@@ -23,10 +23,10 @@ ARG USERNAME=user
 ARG USER_UID=1001
 ARG USER_GID=$USER_UID
 RUN addgroup --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
-# # Add sudo support. Omit if you don't need to install software after connecting.
-# && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-# && chmod 0440 /etc/sudoers.d/$USERNAME
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    # Add sudo support. Omit if you don't need to install software after connecting.
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
 USER $USERNAME
 
 WORKDIR /usr/app
@@ -36,7 +36,7 @@ COPY --chown=$USERNAME:$USER_GID --from=builder /usr/tmp/.next ./.next
 COPY --chown=$USERNAME:$USER_GID --from=builder /usr/tmp/config/config.yml ./config/config.yml
 
 ENV NODE_ENV production
-RUN mkdir ./logs
+RUN sudo mkdir ./logs
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
