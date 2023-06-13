@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "next",
         "build": "next build",
-        "start": "next start --loglevel=verbose",
+        "start": "next start",
         "types": "tsc --noEmit",
         "lint": "next lint",
         "test": "jest --watch",
