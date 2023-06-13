@@ -18,7 +18,7 @@ RUN npm run build
 #------------------
 FROM $NODE_ALPINE_VARIANT AS runner
 
-RUN apk add --no-cache shadow
+RUN apk add --no-cache shadow sudo
 ARG USERNAME=user
 ARG USER_UID=1001
 ARG USER_GID=$USER_UID
