@@ -43,5 +43,4 @@ RUN sudo mkdir ./logs && sudo chown -R $USERNAME:$USER_GID ./logs
 # TODO: port as arg
 EXPOSE 3000
 
-# sudo is required for the logs directory
-CMD ["npm", "run", "start", "--logs-dir=./logs"]
+CMD ["sudo", "npm", "run", "start", "--logs-dir=./logs"]
