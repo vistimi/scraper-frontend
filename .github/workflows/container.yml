@@ -100,6 +100,7 @@ jobs:
         env:
           BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
+          yum update -qq && yum install git -y -qq
           git clone https://github.com/KookaS/scraper-frontend.git
           cd "$MY_PATH\scraper-frontend"
           git checkout $BRANCH
@@ -107,7 +108,6 @@ jobs:
       - name: Setup
         id: setup
         run: |
-          yum update -qq
           yum install curl wget -y -qq
           wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64  -qq -O /usr/bin/yq && chmod +x /usr/bin/yq
           echo "PORT=$(yq eval '.port' config/config.yml)" >> $GITHUB_OUTPUT
