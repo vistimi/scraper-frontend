@@ -79,8 +79,8 @@ jobs:
   project:
     name: Container check
     needs: [ecr]
-    runs-on: ubuntu-latest
-    container: ubuntu # connect the workflow steps to the network
+    runs-on: ubuntu-latest  # root
+    container: fcos # dynamic port mapping
     environment: KookaS
     env:
       HEALTHCHECK: /healthz
