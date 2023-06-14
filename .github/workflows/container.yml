@@ -101,8 +101,8 @@ jobs:
       - name: Setup
         id: setup
         run: |
-          apt update -qq
-          apt install curl wget -y -qq
+          yum update -qq
+          yum install curl wget -y -qq
           wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64  -qq -O /usr/bin/yq && chmod +x /usr/bin/yq
           echo "PORT=$(yq eval '.port' config/config.yml)" >> $GITHUB_OUTPUT
 
