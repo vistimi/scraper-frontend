@@ -80,7 +80,7 @@ jobs:
     name: Container check
     needs: [ecr]
     runs-on: ubuntu-latest  # root
-    container: fcos # dynamic port mapping
+    container: fedora # dynamic port mapping
     environment: KookaS
     env:
       HEALTHCHECK: /healthz
