@@ -36,7 +36,7 @@ COPY --chown=$USERNAME:$USER_GID --from=builder /usr/tmp/.next ./.next
 COPY --chown=$USERNAME:$USER_GID --from=builder /usr/tmp/config/config.yml ./config/config.yml
 
 ENV NODE_ENV production
-RUN sudo mkdir ./logs
+RUN sudo mkdir ./logs && sudo chown -R $USERNAME:$USER_GID ./logs
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
