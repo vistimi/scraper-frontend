@@ -4,9 +4,10 @@ ARG VARIANT=alpine:3.16
 #------------------
 #    BUILDER
 #------------------
-FROM $VARIANT AS builder
+FROM $NODE_ALPINE_VARIANT AS builder
 
-RUN apk add --update --no-cache nodejs npm libc6-compat
+# nodejs npm
+RUN apk add --update --no-cache libc6-compat
 
 WORKDIR /usr/tmp
 
@@ -17,30 +18,31 @@ RUN npm run build
 #------------------
 #    runner
 #------------------
-FROM $VARIANT AS runner
+FROM $NODE_ALPINE_VARIANT AS runner
 
-RUN apk add --update --no-cache shadow sudo nodejs npm
+# nodejs npm
+RUN apk add --update --no-cache shadow sudo 
 
-ARG USERNAME=user
-ARG USER_UID=1001
-ARG USER_GID=$USER_UID
-RUN addgroup --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
-# Add sudo support. Omit if you don't need to install software after connecting.
-# && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-# && chmod 0440 /etc/sudoers.d/$USERNAME
-USER $USERNAME
+# ARG USERNAME=user
+# ARG USER_UID=1001
+# ARG USER_GID=$USER_UID
+# RUN addgroup --gid $USER_GID $USERNAME \
+#     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
+# # Add sudo support. Omit if you don't need to install software after connecting.
+# # && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+# # && chmod 0440 /etc/sudoers.d/$USERNAME
+# USER $USERNAME
 
-# RUN addgroup --system --gid 1001 nodejs
-# RUN adduser --system --uid 1001 nextjs
-# USER nextjs
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+USER nextjs
 
 WORKDIR /usr/app
-# -chown=$USERNAME:$USER_GID
-COPY --from=builder --chown=$USERNAME:$USER_GID /usr/tmp/package.json /usr/tmp/package-lock.json ./
-COPY --from=builder --chown=$USERNAME:$USER_GID /usr/tmp/node_modules/ ./node_modules/
-COPY --from=builder --chown=$USERNAME:$USER_GID /usr/tmp/.next/ ./.next/
-COPY --from=builder --chown=$USERNAME:$USER_GID /usr/tmp/config/ ./config/
+# chown=$USERNAME:$USER_GID
+COPY --from=builder /usr/tmp/package.json /usr/tmp/package-lock.json ./
+COPY --from=builder /usr/tmp/node_modules/ ./node_modules/
+COPY --from=builder /usr/tmp/.next/ ./.next/
+COPY --from=builder /usr/tmp/config/ ./config/
 
 # RUN sudo mkdir ./logs && sudo chown -R $USERNAME:$USER_GID ./logs
 
