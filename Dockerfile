@@ -43,4 +43,5 @@ ENV NEXT_TELEMETRY_DISABLED 1
 # TODO: port as arg
 EXPOSE 3000
 
-CMD ["npm", "run", "start", "--loglevel=verbose"]
+# "--loglevel=verbose"
+CMD ["npm", "run", "start"]
