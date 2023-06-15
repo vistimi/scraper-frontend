@@ -36,8 +36,6 @@ COPY --from=builder  /usr/tmp/node_modules/ ./node_modules/
 COPY --from=builder  /usr/tmp/.next/ ./.next/
 COPY --from=builder  /usr/tmp/config/ ./config/
 
-# RUN sudo mkdir ./logs && sudo chown -R $USERNAME:$USER_GID ./logs
-
 ENV NODE_ENV production
 # disable telemetry during runtime.
 ENV NEXT_TELEMETRY_DISABLED 1
@@ -45,4 +43,4 @@ ENV NEXT_TELEMETRY_DISABLED 1
 # TODO: port as arg
 EXPOSE 3000
 
-CMD ["npm", "run", "start","--loglevel=verbose"]
+CMD ["npm", "run", "start", "--loglevel=verbose"]
