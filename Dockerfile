@@ -37,6 +37,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 USER nextjs
 
+WORKDIR /home/nextjs/.npm/_logs
 WORKDIR /usr/app
 # chown=$USERNAME:$USER_GID
 COPY --from=builder /usr/tmp/package.json /usr/tmp/package-lock.json ./
@@ -55,4 +56,4 @@ EXPOSE 3000
 
 # "--logs-dir=./logs"
 # "sudo" npm ERR! Log files were not written due to an error writing to the directory: /usr/app/logs
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "start", "--loglevel=silent"]
