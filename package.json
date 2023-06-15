@@ -1,5 +1,5 @@
 {
-    "name": "dataset-gui",
+    "name": "scraper-frontend",
     "version": "1.0.0",
     "description": "",
     "main": "index.tsx",
@@ -38,12 +38,12 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/KookaS/dataset-gui"
+        "url": "git+https://github.com/KookaS/scraper-frontend"
     },
     "author": "",
     "license": "ISC",
     "bugs": {
-        "url": "https://github.com/KookaS/dataset-gui/issues"
+        "url": "https://github.com/KookaS/scraper-frontend/issues"
     },
-    "homepage": "https://github.com/KookaS/dataset-gui#readme"
+    "homepage": "https://github.com/KookaS/scraper-frontend#readme"
 }

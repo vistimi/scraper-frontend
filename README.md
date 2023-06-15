@@ -32,7 +32,7 @@ packages:
 #### Run with docker
 
 ```shell
-docker rmi -f scraper-frontend; docker build -t scraper-frontend .; docker run --rm -it --net scraper-net --name scraper-frontend --network-alias backend -p 3000:3000 --env-file .devcontainer/devcontainer.env scraper-frontend
+docker rmi -f scraper-frontend; docker build -t scraper-frontend .; docker run --read-only --rm -it --net scraper-net --name scraper-frontend --network-alias backend -p 3000:3000 --env-file .devcontainer/devcontainer.env scraper-frontend
 ```
 
 #### Run without docker (devcontainer)
