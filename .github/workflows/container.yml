@@ -74,7 +74,7 @@ jobs:
         options: --read-only --tmpfs /run/npm
         credentials:
           username: AWS
-          password: ${{ needs.ecr.outputs.ECR_LOGIN_PASSWORD }}
+          password: ${{ needs.ecr-wait.outputs.ECR_LOGIN_PASSWORD }}
         env:
           TMPFS_NPM: /run/npm
           NEXT_PUBLIC_API_URL: not-needed # http://localhost:8080
