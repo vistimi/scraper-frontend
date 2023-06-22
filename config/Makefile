@@ -4,8 +4,8 @@ MAKEFLAGS += --warn-undefined-variables
 
 export OVERRIDE_EXTENSION OUTPUT_FOLDER
 
-.ONESHELL: prepare-scraper-frontend
-prepare-scraper-frontend:
+.ONESHELL: prepare
+prepare:
 	cat <<-EOF > ${OUTPUT_FOLDER}/${OVERRIDE_EXTENSION}.env
 		NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 		PORT=${PORT}
