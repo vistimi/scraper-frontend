@@ -10,16 +10,17 @@ on:
     workflows: [Repository]
     types: [completed]
     branches-ignore: [dependabot/**]
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: environment
+        description: "The environment to deploy to"
+        required: false
+        default: KookaS
 
 env:
   COMMON_NAME: ${{ github.sha }}
-  AWS_REGION: ${{ vars.AWS_REGION }}
-  AWS_PROFILE: ${{ vars.AWS_PROFILE }}
-  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-  AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
-  AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
-  AWS_CLI_SERVICE: ecr  # private
-  ECR_URI: ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com
+  AWS_CLI_SERVICE: ecr # private
   IMAGE_TAG: latest # ${{ github.sha }}
   ORG: ${{ github.repository_owner }}
   BRANCH: ${{ github.head_ref || github.ref_name }}
@@ -28,7 +29,14 @@ jobs:
   ecr-wait:
     name: setup ECR
     runs-on: ubuntu-latest
-    environment: KookaS
+    environment: ${{ inputs.environment || 'KookaS' }}
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_PROFILE: ${{ vars.AWS_PROFILE }}
+      AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+      AWS_ACCESS_KEY: ${{ vars.AWS_ACCESS_KEY }}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+      ECR_REGISTRY_URI: ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com
     # if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event_name == 'push' }}
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
@@ -70,7 +78,7 @@ jobs:
       HEALTHCHECK: /healthz
     services:
       local-project:
-        image:  ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{ needs.ecr-wait.outputs.ECR_REPOSITORY_NAME }}:${{ needs.ecr-wait.outputs.IMAGE_TAG }}
+        image: ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{ needs.ecr-wait.outputs.ECR_REPOSITORY_NAME }}:${{ needs.ecr-wait.outputs.IMAGE_TAG }}
         options: --read-only --tmpfs /run/npm
         credentials:
           username: AWS
@@ -78,12 +86,12 @@ jobs:
         env:
           TMPFS_NPM: /run/npm
           NEXT_PUBLIC_API_URL: not-needed # http://localhost:8080
-          PORT: 3000
+          PORT: # TODO: add variable port here
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        
+
       - name: Setup
         id: setup
         run: |
