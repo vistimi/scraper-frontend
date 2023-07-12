@@ -31,12 +31,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment || 'KookaS' }}
     env:
-      AWS_REGION: ${{ vars.AWS_REGION }}
-      AWS_PROFILE: ${{ vars.AWS_PROFILE }}
+      AWS_REGION_NAME: ${{ vars.AWS_REGION_NAME }}
+      AWS_PROFILE_NAME: ${{ vars.AWS_PROFILE_NAME }}
       AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
       AWS_ACCESS_KEY: ${{ vars.AWS_ACCESS_KEY }}
       AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
-      ECR_REGISTRY_URI: ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com
+      ECR_REGISTRY_URI: ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION_NAME }}.amazonaws.com
     # if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event_name == 'push' }}
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
@@ -50,7 +50,7 @@ jobs:
           aws --version
           aws configure set aws_access_key_id $AWS_ACCESS_KEY
           aws configure set aws_secret_access_key $AWS_SECRET_KEY
-          aws configure set region $AWS_REGION
+          aws configure set region $AWS_REGION_NAME
 
       - name: Get ECR information
         id: get-output
@@ -62,9 +62,9 @@ jobs:
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "ECR_REPOSITORY_NAME=$(echo $ORG-$REPO-$BRANCH | tr A-Z a-z)" >> $GITHUB_OUTPUT
           if [[ $AWS_CLI_SERVICE == ecr ]]; then
-            echo "ECR_LOGIN_PASSWORD=$(aws ecr get-login-password --region $AWS_REGION)" >> $GITHUB_OUTPUT
+            echo "ECR_LOGIN_PASSWORD=$(aws ecr get-login-password --region $AWS_REGION_NAME)" >> $GITHUB_OUTPUT
           elif [[ $AWS_CLI_SERVICE == ecr-public ]]; then
-            echo "ECR_LOGIN_PASSWORD=$(aws ecr-public get-login-password --region $AWS_REGION)" >> $GITHUB_OUTPUT
+            echo "ECR_LOGIN_PASSWORD=$(aws ecr-public get-login-password --region $AWS_REGION_NAME)" >> $GITHUB_OUTPUT
           fi
 
   # Container network where we can access with the service name and the port
@@ -78,7 +78,7 @@ jobs:
       HEALTHCHECK: /healthz
     services:
       local-project:
-        image: ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{ needs.ecr-wait.outputs.ECR_REPOSITORY_NAME }}:${{ needs.ecr-wait.outputs.IMAGE_TAG }}
+        image: ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION_NAME }}.amazonaws.com/${{ needs.ecr-wait.outputs.ECR_REPOSITORY_NAME }}:${{ needs.ecr-wait.outputs.IMAGE_TAG }}
         options: --read-only --tmpfs /run/npm
         credentials:
           username: AWS
