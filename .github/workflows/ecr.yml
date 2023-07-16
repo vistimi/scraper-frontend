@@ -179,7 +179,7 @@ jobs:
           }
           func_ecr_push () {
             # check existance of repository
-            ECR_REPOSITORY_URI=$(aws $AWS_CLI_SERVICE describe-repositories --repository-names $ECR_REPOSITORY_NAME --query 'repositories[0].repositoryUri')
+            ECR_REPOSITORY_URI=$(aws $AWS_CLI_SERVICE describe-repositories --repository-names $ECR_REPOSITORY_NAME --query 'repositories[0].repositoryUri'  | tr -d '"')
             echo ECR_REPOSITORY_URI=$ECR_REPOSITORY_URI
             if [ -z ${ECR_REPOSITORY_URI} ]; then
               func_ecr_create
