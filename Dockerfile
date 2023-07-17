@@ -10,8 +10,10 @@ RUN apk add --update --no-cache libc6-compat nodejs npm
 WORKDIR /usr/tmp
 
 COPY . ./
-RUN npm ci
-RUN npm run build
+
+ARG TARGETOS TARGETARCH
+RUN npm ci --target_arch=$TARGETARCH --target_platform=$TARGETOS
+RUN npm run build --target_arch=$TARGETARCH --target_platform=$TARGETOS
 
 #------------------
 #    runner
