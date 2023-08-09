@@ -48,4 +48,4 @@ RUN npm root -g
 # TODO: port as arg
 EXPOSE 3000
 
-CMD ["/bin/sh", "-c", "npm run start --logs-dir=${TMPFS_NPM}"]
+CMD ["/bin/sh", "-c", "npm run start]
