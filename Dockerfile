@@ -1,4 +1,5 @@
 ARG VARIANT=alpine:3.16
+ARG PORT=3000
 
 #------------------
 #    BUILDER
@@ -45,7 +46,6 @@ ENV NEXT_TELEMETRY_DISABLED 1
 # creates the common node_modules folder
 RUN npm root -g
 
-# TODO: port as arg
-EXPOSE 3000
+EXPOSE $PORT
 
-CMD ["/bin/sh", "-c", "npm run start]
+CMD ["/bin/sh", "-c", "npm run start"]
